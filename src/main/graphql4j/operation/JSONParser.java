@@ -36,7 +36,7 @@ public class JSONParser extends TokenParser {
 	public JSONParser(String ql)throws Exception{
 		super(ql);
 		parse();
-		System.out.println(this);
+		//System.out.println(this);
 	}
 
 	private void readDelimit(int start){

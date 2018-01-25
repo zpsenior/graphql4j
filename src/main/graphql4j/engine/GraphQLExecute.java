@@ -132,10 +132,10 @@ public class GraphQLExecute {
 			Collection<?> collections = (Collection<?>)result;
 			printArrayValue(children, collections.toArray(), fieldType, fragments);
 		}else if(result.getClass().isArray()){
-			Object[] array = (Object[])parent;
+			Object[] array = (Object[])result;
 			printArrayValue(children, array, fieldType, fragments);
 		}else{
-			printObjectValue(children, parent, fieldType, fragments);
+			printObjectValue(children, result, fieldType, fragments);
 		}
 	}
 	
