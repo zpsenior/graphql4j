@@ -66,15 +66,16 @@ public class ObjectType extends Type {
 	
 	@Override
 	public boolean compatible(Type t) {
+		String typeName = t.getName();
 		if(t instanceof ObjectType){
-			if(name.equals(((ObjectType)t).name)){
+			if(name.equals(typeName)){
 				return true;
 			}
-			if(impls != null){
-				for(String impl : impls){
-					if(t.getName().equals(impl)){
-						return true;
-					}
+		}
+		if(impls != null && (t instanceof InterfaceType)){
+			for(String impl : impls){
+				if(typeName.equals(impl)){
+					return true;
 				}
 			}
 		}

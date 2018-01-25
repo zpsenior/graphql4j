@@ -139,7 +139,11 @@ public class GraphQLBuilder {
 		reader.readPunctuator("{");
 		Set<Entity> children = new LinkedHashSet<Entity>();
 		buildEntities(reader, gql, children);
-		Fragment fr = new Fragment(name, typeName, children);
+		Type type = schema.getType(typeName);
+		if(type == null){
+			throw new BindException("not.find.type.in.fragment", name);
+		}
+		Fragment fr = new Fragment(name, type, children);
 		return fr;
 	}
 

@@ -44,7 +44,7 @@ public class TestGraphQL {
 		GraphQLSchema schema;
 		GraphQLSchemaLoader loader = new GraphQLSchemaLoader();
 		schema = loader.load(new String[]{"graphql4j.test.market.BOMarketQuery"});
-		//System.out.println(schema);
+		System.out.println(schema);
 		
 		builder = new GraphQLBuilder(schema);
 		gql = builder.build(query);
@@ -57,6 +57,7 @@ public class TestGraphQL {
 		GraphQLExecute exec = new GraphQLExecute(schema);
 		
 		opt.bindValue("orderParams", "{ownerseq:12456,buyerseq:1036,keyword:'zhou.p',status:3,pageSize:34}");
+		opt.bindValue("userseq", 1024);
 		
 		String res = exec.query(opt, rootQuery);
 		

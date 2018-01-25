@@ -216,9 +216,8 @@ public class GraphQL {
 		String name = entity.getName();
 		if (entity.isFragment()) {
 			Fragment fr = fragments.get(name);
-			String typeName = fr.getMappingType();
-			Type tp = schema.getType(typeName);
-			if (!type.compatible(tp)) {
+			Type tp = fr.getMappingType();
+			if (!type.compatible(tp) && !tp.compatible(type)) {
 				throw new IntrospectionException("type.is.not.compatible",
 						type.getName(), tp.getName());
 			}
@@ -277,18 +276,7 @@ public class GraphQL {
 	private void checkFragments(GraphQLSchema schema) throws Exception {
 		for (String frName : fragments.keySet()) {
 			Fragment fr = fragments.get(frName);
-			String typeName = fr.getMappingType();
-			Type tp = schema.getType(typeName);
-			if (tp == null) {
-				throw new IntrospectionException(
-						"not.find.fragment.mapping.type", typeName);
-			}
-			if (!(tp instanceof ObjectType) && !(tp instanceof InterfaceType)
-					&& !(tp instanceof UnionType)) {
-				throw new IntrospectionException(
-						"fragment.type.must.be.object.or.interface.or.union",
-						typeName);
-			}
+			Type tp = fr.getMappingType();
 			Entity[] entities = fr.getEntities();
 			for (Entity entity : entities) {
 				checkEntity(schema, tp, entity);

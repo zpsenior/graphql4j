@@ -1,4 +1,4 @@
-query ($goodsParams:ScrollQueryGoods={kind:'1',subkind:'2',status:'4',pageSize:10}, $userid:Long, $orderParams:ScrollQueryGoodsOrder){
+query ($goodsParams:ScrollQueryGoods={kind:'1',subkind:'2',status:'4',pageSize:10}, $userid:Long, $orderParams:ScrollQueryGoodsOrder,$userseq:Long){
 	
 	goods(goodsseq:1){
 			status
@@ -25,6 +25,16 @@ query ($goodsParams:ScrollQueryGoods={kind:'1',subkind:'2',status:'4',pageSize:1
 			goodsname
 	}
 	
+	goodsReviews(params:$orderParams)
+	
+	vipuser(userseq:$userseq){
+		... userInfo
+	}
+	
+}
+
+fragment userInfo on VIP{
+	vipno
 }
 
 fragment total on TPGoods{

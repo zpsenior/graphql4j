@@ -1,5 +1,7 @@
 package graphql4j.engine;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -25,7 +27,7 @@ public class GraphQLExecute {
 	
 	private GraphQLSchema schema;
 	
-	private StringBuffer sb;
+	private PrintWriter pw;
 	
 	public GraphQLExecute(GraphQLSchema schema){
 		this.schema = schema;
@@ -55,19 +57,21 @@ public class GraphQLExecute {
 		if(!rootQbj.getClass().getName().equals(rootType.getBindClass())){
 			throw new IntrospectionException("root.obj.not.match.root.type");
 		}
-		sb = new StringBuffer();
-		sb.append("{");
+		StringWriter sw = new StringWriter();
+		pw = new PrintWriter(sw);
+		pw.println("{");
 		Entity[] entities = operation.getEntities();
 		boolean first = true;
 		for(Entity entity : entities){
 			if(!first){
-				sb.append(",");
+				pw.print(",");
 			}
 			printEntity(entity, rootQbj, rootType, operation.getFragments());
 			first = false;
 		}
-		sb.append("}");
-		return sb.toString();
+		pw.println("}");
+		pw.flush();
+		return sw.toString();
 	}
 	
 	private void printEntity(Entity entity, Object parent, Type parentType, Fragment[] fragments)throws Exception{
@@ -83,13 +87,13 @@ public class GraphQLExecute {
 			}
 			throw new IntrospectionException("not.find.fragment", name);
 		}
-		sb.append(entity.getAlias());
-		sb.append(":");
 		
 		if(parent == null){
-			sb.append("null");
-			return;
+			throw new IntrospectionException("entity.is.null");
 		}
+		
+		pw.print(entity.getAlias());
+		pw.print(":");
 		
 		String fieldName = entity.getName();
 		
@@ -103,28 +107,23 @@ public class GraphQLExecute {
 			if(field.isNotNull()){
 				throw new BindException("field.result.value.is.null", fieldName);
 			}
-			sb.append("null");
+			pw.print("null");
 			return;
 		}
 		
 		Type fieldType = field.getType();
 		
 		if(fieldType instanceof ScalarType){
-			if(fieldType == ScalarType.Date){
-				Date date = (Date)result;
-				sb.append("'").append(date.getTime()).append("'");
-			}else{
-				sb.append("'").append(result).append("'");
-			}
+			printScalarValue(result, (ScalarType)fieldType);
 			return ;
 		}else if(fieldType instanceof EnumType){
-			sb.append("'").append(result).append("'");
+			printEnumValue(result, (EnumType)fieldType);
 			return ;
 		}
 		
 		Entity[] children = entity.getChildren();
 		if(children == null || children.length <= 0){
-			printAllField(fieldType, result);
+			printAllField(result, fieldType);
 			return ;
 		}
 		
@@ -139,43 +138,76 @@ public class GraphQLExecute {
 		}
 	}
 	
-	private void printArrayValue(Entity[] entitis, Object[] array, Type parentType, Fragment[] fragments)throws Exception{
-		parentType = ((ArrayType)parentType).getBaseType();
-		sb.append("[");
+	private void printScalarValue(Object obj, ScalarType objType){
+		if(objType == ScalarType.Date){
+			Date date = (Date)obj;
+			pw.print("'");
+			pw.print(date.getTime());
+			pw.print("'");
+		}else{
+			pw.print("'");
+			pw.print(obj);
+			pw.print("'");
+		}
+		return ;
+	}
+	
+	private void printEnumValue(Object obj, EnumType objType){
+		pw.print("'");
+		pw.print(obj);
+		pw.print("'");
+		return ;
+	}
+	
+	private void printArrayValue(Entity[] entitis, Object[] array, Type arrayType, Fragment[] fragments)throws Exception{
+		Type objType = ((ArrayType)arrayType).getBaseType();
+		pw.print("[");
 		boolean first = true;
 		for(Object obj : array){
 			if(!first){
-				sb.append(", ");
+				pw.print(", ");
 			}
-			printObjectValue(entitis, obj, parentType, fragments);
+			printObjectValue(entitis, obj, objType, fragments);
 			first = false;
 		}
-		sb.append("]");
+		pw.print("]");
 	}
 
-	private void printObjectValue(Entity[] entitis, Object obj, Type parentType, Fragment[] fragments) throws Exception {
-		sb.append("{");
+	private void printObjectValue(Entity[] entitis, Object obj, Type objType, Fragment[] fragments) throws Exception {
+		pw.print("{");
 		boolean first = true;
 		for(Entity en : entitis){
 			if(!first){
-				sb.append(",");
+				pw.print(",");
 			}
-			printEntity(en, obj, parentType, fragments);
+			printEntity(en, obj, objType, fragments);
 			first = false;
 		}
-		sb.append("}");
+		pw.print("}");
 	}
 
 	private void printFragment(Fragment fr, Object parent, Type parentType, Fragment[] fragments)throws Exception{
+		Type mp = fr.getMappingType();
 		if(parentType instanceof UnionType){
 			UnionType ut = (UnionType)parentType;
 			parentType = ut.cast(parent);
+			if(!mp.equals(parentType)){
+				throw new BindException("diff.fragment.type.with.result.type", mp, parentType);
+			}
+		}else if(parentType instanceof InterfaceType || parentType instanceof ObjectType){
+			if(mp.compatible(parentType)){
+				Class<?> cls = Class.forName(mp.getBindClass());
+				parent = cls.cast(parent);
+			}else if(!parentType.compatible(mp)){
+				throw new BindException("uncompatible.fragment.type.with.result.type", mp, parentType);
+			}
 		}
+		
 		Entity[] entities = fr.getEntities();
 		boolean first = true;
 		for(Entity entity : entities){
 			if(!first){
-				sb.append(",");
+				pw.print(",");
 			}
 			printEntity(entity, parent, parentType, fragments);
 			first = false;
@@ -183,45 +215,35 @@ public class GraphQLExecute {
 	}
 
 	
-	private void printAllField(Type type, Object result) throws Exception {
+	private void printAllField(Object result, Type type) throws Exception {
 		if(result == null){
-			sb.append("null");
+			pw.print("null");
 			return;
 		}
-		if(type == ScalarType.Date){
-			Date date = (Date)result;
-			sb.append("'");
-			sb.append(date.getTime());
-			sb.append("'");
-			return;
-		}else if(type instanceof ScalarType){
-			sb.append("'");
-			sb.append(result);
-			sb.append("'");
+		if(type instanceof ScalarType){
+			printScalarValue(result, (ScalarType)type);
 			return;
 		}else if(type instanceof ArrayType){
-			printArrayTypeObj((ArrayType)type, result);
+			printArrayTypeObj(result, (ArrayType)type);
 			return;
 		}else if(type instanceof ObjectType){
-			printObjectTypeObj((ObjectType)type, result);
+			printObjectTypeObj(result, (ObjectType)type);
 			return;
 		}else if(type instanceof UnionType){
 			UnionType ut = (UnionType)type;
 			ObjectType ot = ut.matchType(result);
-			printObjectTypeObj(ot, result);
+			printObjectTypeObj(result, ot);
 			return;
 		}else if(type instanceof EnumType){
-			sb.append("'");
-			sb.append(result);
-			sb.append("'");
+			printEnumValue(result, (EnumType)type);
 			return;
 		}
 	}
 	
 	@SuppressWarnings("rawtypes")
-	private void printArrayTypeObj(ArrayType arrayType, Object result) throws Exception {
+	private void printArrayTypeObj(Object result, ArrayType arrayType) throws Exception {
 		Type type = arrayType.getBaseType();
-		sb.append("[");
+		pw.print("[");
 		Object[] array;
 		if(result instanceof Collection){
 			array = ((Collection)result).toArray();
@@ -233,30 +255,31 @@ public class GraphQLExecute {
 		boolean first = true;
 		for(Object obj : array){
 			if(!first){
-				sb.append(",");
+				pw.print(",");
 			}
-			printAllField(type, obj);
+			printAllField(obj, type);
 			first = false;
 		}
-		sb.append("]");
+		pw.print("]");
 	}
 
-	private void printObjectTypeObj(ObjectType type, Object result) throws Exception {
+	private void printObjectTypeObj(Object result, ObjectType type) throws Exception {
 		String[] names = getAllFieldNames(type);
 		boolean first = true;
-		sb.append("{");
+		pw.print("{");
 		for(String nm : names){
 			ObjectField field = getField(type, nm);
 			Type tp = field.getType();
 			Object res = field.invokeMethod(result, null);
 			if(!first){
-				sb.append(",");
+				pw.print(",");
 			}
-			sb.append(nm).append(":");
-			printAllField(tp, res);
+			pw.print(nm);
+			pw.print(":");
+			printAllField(res, tp);
 			first = false;
 		}
-		sb.append("}");
+		pw.print("}");
 	}
 	
 	private String[] getAllFieldNames(Type t){

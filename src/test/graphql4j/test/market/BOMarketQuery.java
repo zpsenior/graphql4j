@@ -11,6 +11,21 @@ import graphql4j.annotation.GraphQLObject;
 
 @GraphQLObject("Query")
 public class BOMarketQuery {
+	
+	@GraphQLField("vip")
+	public VIP getVIP(@GraphQLArgument("userseq") long userseq) throws Exception {
+		return getVIPUser(userseq);
+	}
+
+	@GraphQLField("vipuser")
+	public VIPUser getVIPUser(@GraphQLArgument("userseq") long userseq) throws Exception {
+		VIPUser user = new VIPUser();
+		System.out.println("userseq: " + userseq);
+		user.setVipno("sliver2346");
+		user.setUsername("VIP01");
+		user.setMobileno("13899998888");
+		return user;
+	}
 
 	@GraphQLField("user")
 	public User getUser(@GraphQLArgument("username") String username, @GraphQLArgument("mobileno") String mobileno, @GraphQLArgument("nickname") String nickname) throws Exception {

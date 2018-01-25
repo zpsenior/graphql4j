@@ -33,7 +33,7 @@ public class InputObjectType extends Type implements Input {
 		}
 		return null;
 	}
-
+	
 	@Override
 	public void toSDL(StringBuffer sb) {
 		sb.append("\n");

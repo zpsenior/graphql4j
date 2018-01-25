@@ -107,7 +107,7 @@ public class GraphQLSchema implements TypeFinder {
 				checkObjectField(fields);
 				checkObjectImplements(ot.getImplements());
 			}else if(type instanceof InterfaceType){
-				fields = ((ObjectType)type).getFields();
+				fields = ((InterfaceType)type).getFields();
 				checkObjectField(fields);
 			}else if(type instanceof InputObjectType){
 				InputObjectField[] arguments = ((InputObjectType)type).getFields();

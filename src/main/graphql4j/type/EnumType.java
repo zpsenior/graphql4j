@@ -40,7 +40,7 @@ public class EnumType extends Type implements Input {
 		}
 		sb.append("}");
 	}
-
+	
 	@Override
 	public String getName() {
 		return name;

@@ -172,7 +172,42 @@ public class GraphQLSchemaLoader implements TypeFinder {
 		List<ObjectField> fields = buildObjectFields(cls, gqlObject.valueObject());
 		return new ObjectType(name, impls, cls.getName(), fields);
 	}
+
+	private Set<String> getInterfaceName(Class<?> cls)throws Exception {
+		Set<String> set = new HashSet<String>();
+		Set<Class<?>> parents = getClassParents(cls);
+		for(Class<?> inf : parents){
+			Annotation ann = inf.getAnnotation(GraphQLInterface.class);
+			if(ann != null){
+				String name = ((GraphQLInterface)ann).value();
+				if(name == null || "".equals(name)){
+					name = inf.getSimpleName();
+				}
+				set.add(name);
+			}
+		}
+		if(set.size() <= 0){
+			return null;
+		}
+		return set;
+	}
 	
+	private Set<Class<?>> getClassParents(Class<?> cls)throws Exception{
+		Set<Class<?>> set = new HashSet<Class<?>>();
+		for(Class<?> c : cls.getInterfaces()){
+			set.add(c);
+		}
+		Class<?> parent = cls;
+		while(true){
+			parent = parent.getSuperclass();
+			if("java.lang.Object".equals(parent.getName())){
+				break;
+			}
+			set.add(parent);
+		}
+		return set;
+	}
+
 	private InterfaceType buildInterfaceType(Class<?> cls)throws Exception{
 		String name;
 		GraphQLInterface gqlInterface = cls.getAnnotation(GraphQLInterface.class);
@@ -306,25 +341,6 @@ public class GraphQLSchemaLoader implements TypeFinder {
 			return ArrayType.buildNestedArrayType(returnClass, returnType, this, input);
 		}
 		return getTypeByClass(returnClass, input);
-	}
-
-	private Set<String> getInterfaceName(Class<?> cls)throws Exception {
-		Set<String> set = new HashSet<String>();
-		Class<?>[] interfaces = cls.getInterfaces();
-		for(Class<?> inf : interfaces){
-			Annotation ann = inf.getAnnotation(GraphQLInterface.class);
-			if(ann != null){
-				String name = ((GraphQLInterface)ann).value();
-				if(name == null){
-					name = inf.getSimpleName();
-				}
-				set.add(name);
-			}
-		}
-		if(set.size() <= 0){
-			return null;
-		}
-		return set;
 	}
 
 	private List<Argument> getArguments(Method method)throws Exception{
