@@ -160,7 +160,7 @@ public abstract class TokenReader {
 	public final boolean checkPunctuator(String str)throws Exception{
 		Token t = readToken();
 		if(str.equals(t.getName()) && Token.TOKEN_TYPE_PUNCTUATOR == t.getType()){
-			System.out.println(t.getPos() + ":" + t.getName());
+			//System.out.println(t.getPos() + ":" + t.getName());
 			return true;
 		}
 		forward(-1);

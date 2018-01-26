@@ -35,6 +35,23 @@ public class Argument extends JObject implements Comparable<Argument>{
 	public boolean isNotNull() {
 		return notNull;
 	}
+	
+	public boolean equals(Object o){
+		if(!(o instanceof Argument)){
+			return false;
+		}
+		Argument a = (Argument)o;
+		if(!name.equals(a.name)){
+			return false;
+		}
+		if(!type.equals(a.type)){
+			return false;
+		}
+		if(notNull != a.notNull){
+			return false;
+		}
+		return true;
+	}
 
 	@Override
 	public int compareTo(Argument o) {

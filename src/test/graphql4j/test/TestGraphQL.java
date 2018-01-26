@@ -11,12 +11,14 @@ import graphql4j.type.GraphQLSchema;
 import graphql4j.type.GraphQLSchemaLoader;
 
 public class TestGraphQL {
-	
-	private static String json = "{name:'goods',type:1,body:{itemseq:23445,path:'wellcode',items:[[234,567],[123],[895,34, 0,45]]}}";
 
 	public static void main(String[] args) {
+		//int status = 2;
 		try {
 			testGQL(readResource("graphql4j/test/market.gql"));
+			//int a = status | 2;
+			//System.out.println(a);
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 			return;

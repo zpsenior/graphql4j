@@ -105,7 +105,7 @@ public class GraphQLSchema implements TypeFinder {
 				ObjectType ot = (ObjectType)type;
 				fields = ot.getFields();
 				checkObjectField(fields);
-				checkObjectImplements(ot.getImplements());
+				checkObjectImplements(ot.getImplements(), fields);
 			}else if(type instanceof InterfaceType){
 				fields = ((InterfaceType)type).getFields();
 				checkObjectField(fields);
@@ -127,7 +127,7 @@ public class GraphQLSchema implements TypeFinder {
 		}
 	}
 
-	private void checkObjectImplements(String[] impls)throws Exception{
+	private void checkObjectImplements(String[] impls, ObjectField[] fields)throws Exception{
 		if(impls == null){
 			return;
 		}
@@ -139,7 +139,22 @@ public class GraphQLSchema implements TypeFinder {
 			if(!(type instanceof InterfaceType)){
 				throw new IntrospectionException("must.implements.interface.type", typeName);
 			}
+			InterfaceType it = (InterfaceType)type;
+			for(ObjectField of : it.getFields()){
+				if(!includeObjectField(of, fields)){
+					throw new IntrospectionException("not.implements.interface.method", of.getName());
+				}
+			}
 		}
+	}
+
+	private boolean includeObjectField(ObjectField of, ObjectField[] fields) {
+		for(ObjectField field : fields){
+			if(field.equals(of)){
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void checkObjectField(ObjectField[] fields)throws Exception{

@@ -11,8 +11,7 @@ import java.util.Set;
 import graphql4j.operation.Entity;
 import graphql4j.operation.Fragment;
 import graphql4j.operation.GraphQL;
-import graphql4j.exception.BindException;
-import graphql4j.exception.IntrospectionException;
+import graphql4j.exception.ExecuteException;
 import graphql4j.type.EnumType;
 import graphql4j.type.GraphQLSchema;
 import graphql4j.type.ArrayType;
@@ -28,6 +27,36 @@ public class GraphQLExecute {
 	private GraphQLSchema schema;
 	
 	private PrintWriter pw;
+	private int deep = 0;
+	
+	private void print(Object... values){
+		for(Object value : values){
+			pw.print(value);
+		}
+	}
+	
+	private void println(Object value){
+		pw.println(value);
+		for(int i = 0; i < deep; i++){
+			pw.print("   ");
+		}
+	}
+	
+	private void printStart(Object value){
+		deep++;
+		pw.println(value);
+		for(int i = 0; i < deep; i++){
+			pw.print("   ");
+		}
+	}
+	
+	private void printEnd(){
+		deep--;
+		pw.println();
+		for(int i = 0; i < deep; i++){
+			pw.print("   ");
+		}
+	}
 	
 	public GraphQLExecute(GraphQLSchema schema){
 		this.schema = schema;
@@ -45,31 +74,32 @@ public class GraphQLExecute {
 
 	private String execute(GraphQL.Operation operation, Object rootQbj, Type rootType)throws Exception{
 		if(operation == null){
-			throw new IntrospectionException("null.graphql.obj");
+			throw new ExecuteException("null.graphql.obj");
 		}
 		if(rootQbj == null){
-			throw new IntrospectionException("null.root.obj");
+			throw new ExecuteException("null.root.obj");
 		}
 		if(rootType == null){
-			throw new IntrospectionException("null.root.type");
+			throw new ExecuteException("null.root.type");
 		}
 		
 		if(!rootQbj.getClass().getName().equals(rootType.getBindClass())){
-			throw new IntrospectionException("root.obj.not.match.root.type");
+			throw new ExecuteException("root.obj.not.match.root.type");
 		}
 		StringWriter sw = new StringWriter();
 		pw = new PrintWriter(sw);
-		pw.println("{");
+		printStart("{");
 		Entity[] entities = operation.getEntities();
 		boolean first = true;
 		for(Entity entity : entities){
 			if(!first){
-				pw.print(",");
+				println(",");
 			}
 			printEntity(entity, rootQbj, rootType, operation.getFragments());
 			first = false;
 		}
-		pw.println("}");
+		printEnd();
+		print("}");
 		pw.flush();
 		return sw.toString();
 	}
@@ -85,15 +115,15 @@ public class GraphQLExecute {
 					}
 				}
 			}
-			throw new IntrospectionException("not.find.fragment", name);
+			throw new ExecuteException("not.find.fragment", name);
 		}
 		
 		if(parent == null){
-			throw new IntrospectionException("entity.is.null");
+			throw new ExecuteException("entity.is.null");
 		}
 		
-		pw.print(entity.getAlias());
-		pw.print(":");
+		print(entity.getAlias());
+		print(":");
 		
 		String fieldName = entity.getName();
 		
@@ -105,13 +135,14 @@ public class GraphQLExecute {
 		
 		if(result == null){
 			if(field.isNotNull()){
-				throw new BindException("field.result.value.is.null", fieldName);
+				throw new ExecuteException("field.result.value.is.null", fieldName);
 			}
-			pw.print("null");
+			print("null");
 			return;
 		}
 		
 		Type fieldType = field.getType();
+		Entity[] children = entity.getChildren();
 		
 		if(fieldType instanceof ScalarType){
 			printScalarValue(result, (ScalarType)fieldType);
@@ -119,12 +150,10 @@ public class GraphQLExecute {
 		}else if(fieldType instanceof EnumType){
 			printEnumValue(result, (EnumType)fieldType);
 			return ;
-		}
-		
-		Entity[] children = entity.getChildren();
-		if(children == null || children.length <= 0){
-			printAllField(result, fieldType);
-			return ;
+		}else if(children == null || children.length <= 0){
+			/*printAllField(result, fieldType);
+			return ;*/
+			throw new ExecuteException("can.not.print.all.object.entity.field", fieldName);
 		}
 		
 		if(result instanceof Collection){
@@ -141,49 +170,43 @@ public class GraphQLExecute {
 	private void printScalarValue(Object obj, ScalarType objType){
 		if(objType == ScalarType.Date){
 			Date date = (Date)obj;
-			pw.print("'");
-			pw.print(date.getTime());
-			pw.print("'");
+			print("'", date.getTime(), "'");
 		}else{
-			pw.print("'");
-			pw.print(obj);
-			pw.print("'");
+			print("'", obj, "'");
 		}
-		return ;
 	}
 	
 	private void printEnumValue(Object obj, EnumType objType){
-		pw.print("'");
-		pw.print(obj);
-		pw.print("'");
-		return ;
+		print("'", obj, "'");
 	}
 	
 	private void printArrayValue(Entity[] entitis, Object[] array, Type arrayType, Fragment[] fragments)throws Exception{
 		Type objType = ((ArrayType)arrayType).getBaseType();
-		pw.print("[");
+		printStart("[");
 		boolean first = true;
 		for(Object obj : array){
 			if(!first){
-				pw.print(", ");
+				println(", ");
 			}
 			printObjectValue(entitis, obj, objType, fragments);
 			first = false;
 		}
-		pw.print("]");
+		printEnd();
+		print("]");
 	}
 
 	private void printObjectValue(Entity[] entitis, Object obj, Type objType, Fragment[] fragments) throws Exception {
-		pw.print("{");
+		printStart("{");
 		boolean first = true;
 		for(Entity en : entitis){
 			if(!first){
-				pw.print(",");
+				println(",");
 			}
 			printEntity(en, obj, objType, fragments);
 			first = false;
 		}
-		pw.print("}");
+		printEnd();
+		print("}");
 	}
 
 	private void printFragment(Fragment fr, Object parent, Type parentType, Fragment[] fragments)throws Exception{
@@ -192,14 +215,14 @@ public class GraphQLExecute {
 			UnionType ut = (UnionType)parentType;
 			parentType = ut.cast(parent);
 			if(!mp.equals(parentType)){
-				throw new BindException("diff.fragment.type.with.result.type", mp, parentType);
+				throw new ExecuteException("diff.fragment.type.with.result.type", mp, parentType);
 			}
 		}else if(parentType instanceof InterfaceType || parentType instanceof ObjectType){
 			if(mp.compatible(parentType)){
 				Class<?> cls = Class.forName(mp.getBindClass());
 				parent = cls.cast(parent);
 			}else if(!parentType.compatible(mp)){
-				throw new BindException("uncompatible.fragment.type.with.result.type", mp, parentType);
+				throw new ExecuteException("uncompatible.fragment.type.with.result.type", mp, parentType);
 			}
 		}
 		
@@ -207,7 +230,7 @@ public class GraphQLExecute {
 		boolean first = true;
 		for(Entity entity : entities){
 			if(!first){
-				pw.print(",");
+				println(",");
 			}
 			printEntity(entity, parent, parentType, fragments);
 			first = false;
@@ -217,7 +240,7 @@ public class GraphQLExecute {
 	
 	private void printAllField(Object result, Type type) throws Exception {
 		if(result == null){
-			pw.print("null");
+			print("null");
 			return;
 		}
 		if(type instanceof ScalarType){
@@ -243,43 +266,44 @@ public class GraphQLExecute {
 	@SuppressWarnings("rawtypes")
 	private void printArrayTypeObj(Object result, ArrayType arrayType) throws Exception {
 		Type type = arrayType.getBaseType();
-		pw.print("[");
+		printStart("[");
 		Object[] array;
 		if(result instanceof Collection){
 			array = ((Collection)result).toArray();
 		}else if(result.getClass().isArray()){
 			array = (Object[])result;
 		}else{
-			throw new BindException("result.not.match.array.type", result.getClass(), type);
+			throw new ExecuteException("result.not.match.array.type", result.getClass(), type);
 		}
 		boolean first = true;
 		for(Object obj : array){
 			if(!first){
-				pw.print(",");
+				println(",");
 			}
 			printAllField(obj, type);
 			first = false;
 		}
-		pw.print("]");
+		printEnd();
+		println("]");
 	}
 
 	private void printObjectTypeObj(Object result, ObjectType type) throws Exception {
 		String[] names = getAllFieldNames(type);
 		boolean first = true;
-		pw.print("{");
+		printStart("{");
 		for(String nm : names){
 			ObjectField field = getField(type, nm);
 			Type tp = field.getType();
 			Object res = field.invokeMethod(result, null);
 			if(!first){
-				pw.print(",");
+				println(",");
 			}
-			pw.print(nm);
-			pw.print(":");
+			print(nm, ":");
 			printAllField(res, tp);
 			first = false;
 		}
-		pw.print("}");
+		printEnd();
+		print("}");
 	}
 	
 	private String[] getAllFieldNames(Type t){
@@ -301,7 +325,7 @@ public class GraphQLExecute {
 		return fields;
 	}
 	
-	public ObjectField getField(Type tp, String fieldName)throws Exception{
+	private ObjectField getField(Type tp, String fieldName)throws Exception{
 		ObjectField[] fields = getTypeFields(tp);
 		if(fields != null){
 			for(ObjectField field : fields){
@@ -310,6 +334,6 @@ public class GraphQLExecute {
 				}
 			}
 		}
-		throw new BindException("not.bind.field.name", fieldName, tp.getName());
+		throw new ExecuteException("not.bind.field.name", fieldName, tp.getName());
 	}
 }

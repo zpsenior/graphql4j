@@ -8,7 +8,7 @@ query ($goodsParams:ScrollQueryGoods={kind:'1',subkind:'2',status:'4',pageSize:1
 				ctime:createtime
 			}
 	}
-	
+	#queryGoodsList
 	goodsList(params:$goodsParams){
 			status
 			ownerseq
@@ -25,7 +25,12 @@ query ($goodsParams:ScrollQueryGoods={kind:'1',subkind:'2',status:'4',pageSize:1
 			goodsname
 	}
 	
-	goodsReviews(params:$orderParams)
+	goodsReviews(params:$orderParams){
+			orderseq
+			buyerseq
+			ownerseq
+			goodsreview
+	}
 	
 	vipuser(userseq:$userseq){
 		... userInfo

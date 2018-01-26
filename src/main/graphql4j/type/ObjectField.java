@@ -99,6 +99,43 @@ public class ObjectField extends JObject implements Comparable<ObjectField>{
 		return name.compareTo(o.name);
 	}
 
+	public boolean equals(Object o){
+		if(!(o instanceof ObjectField)){
+			return false;
+		}
+		ObjectField of = (ObjectField)o;
+		if(!of.name.equals(name)){
+			return false;
+		}
+		if(!of.method.getName().equals(method.getName())){
+			return false;
+		}
+		if(!of.type.equals(type)){
+			return false;
+		}
+		if(!compareArgument(of.arguments, this.arguments)){
+			return false;
+		};
+		return true;
+	}
+	
+	private boolean compareArgument(List<Argument> args1, List<Argument> args2) {
+		if(args1 == null && args2 == null){
+			return true;
+		}
+		if(args1.size() != args2.size()){
+			return false;
+		}
+		for(Argument arg1 : args1){
+			for(Argument arg2 : args2){
+				if(!arg1.equals(arg2)){
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
 
 	@Override
 	public void toString(StringBuffer sb) {
