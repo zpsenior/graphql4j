@@ -9,6 +9,6 @@ import java.lang.annotation.ElementType;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface GraphQLArgument {
 	String value();
-	boolean notNull() default false;
+	boolean notNull() default true;
 	String defaultValue() default "";
 }

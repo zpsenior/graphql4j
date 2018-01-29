@@ -1,6 +1,7 @@
 package graphql4j.operation;
 
 import graphql4j.JObject;
+import graphql4j.exception.ExecuteException;
 import graphql4j.exception.TransformException;
 import graphql4j.type.Input;
 import graphql4j.type.Type;
@@ -69,7 +70,7 @@ public class QueryArgument extends JObject implements Comparable<QueryArgument>{
 		if(defaultValue != null){
 			return defaultValue;
 		}
-		throw new TransformException("not.set.query.argument", name);
+		throw new ExecuteException("not.set.query.argument", name);
 	}
 
 	public void bindValue(Object value)throws Exception{

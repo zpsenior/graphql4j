@@ -58,7 +58,6 @@ public class InputObjectType extends Type implements Input {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public Object parseValue(Object value) throws Exception {
-		Object bean = Class.forName(getBindClass()).newInstance();
 		Map map;
 		if(value == null){
 			map = null;
@@ -66,15 +65,27 @@ public class InputObjectType extends Type implements Input {
 			JSONReader reader = new JSONReader(new JSONParser((String)value));
 			map = (Map)reader.readObject();
 		}else{
-			map = Obj2Map(value);
+			map = obj2Map(value);
 		}
+		Class<?> cls = Class.forName(getBindClass());
+		if(cls.isInstance(map)){
+			return map;
+		}
+		Object bean;
+		try{
+			bean = cls.newInstance();
+		}catch(Throwable e){
+			throw new TransformException("can.not.create.instance.without.params", getBindClass());
+		}
+		return trans2Bean(map, bean);
+	}
+
+	@SuppressWarnings("rawtypes")
+	private Object trans2Bean(Map map, Object bean)throws Exception {
 		for(InputObjectField field : fields){
 			String name = field.getName();
 			Type t = field.getType();
-			Object val = null;
-			if(value != null){
-				val = map.get((Object)name);
-			}
+			Object val = map.get((Object)name);
 			if(val == null){
 				val = field.getDefaultValue();
 			}
@@ -91,7 +102,7 @@ public class InputObjectType extends Type implements Input {
 	}
 
 	@SuppressWarnings("rawtypes")
-	private Map Obj2Map(Object value)throws Exception{
+	private Map obj2Map(Object value)throws Exception{
 		if(value instanceof Map){
 			return (Map)value;
 		}

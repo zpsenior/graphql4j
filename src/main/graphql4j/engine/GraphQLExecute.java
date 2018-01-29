@@ -4,9 +4,9 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
+//import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
+//import java.util.Set;
 
 import graphql4j.operation.Entity;
 import graphql4j.operation.Fragment;
@@ -28,6 +28,7 @@ public class GraphQLExecute {
 	
 	private PrintWriter pw;
 	private int deep = 0;
+	private boolean format = false;
 	
 	private void print(Object... values){
 		for(Object value : values){
@@ -36,28 +37,39 @@ public class GraphQLExecute {
 	}
 	
 	private void println(Object value){
-		pw.println(value);
-		for(int i = 0; i < deep; i++){
-			pw.print("   ");
-		}
+		pw.print(value);
+		printSpace();
 	}
 	
 	private void printStart(Object value){
 		deep++;
-		pw.println(value);
-		for(int i = 0; i < deep; i++){
-			pw.print("   ");
-		}
+		pw.print(value);
+		printSpace();
 	}
 	
 	private void printEnd(){
 		deep--;
+		printSpace();
+	}
+
+	private void printSpace() {
+		if(!format){
+			return;
+		}
 		pw.println();
 		for(int i = 0; i < deep; i++){
-			pw.print("   ");
+			pw.print("\t");
 		}
 	}
 	
+	public void setFormat(boolean format){
+		this.format = format;
+	}
+
+	public boolean isFormat() {
+		return format;
+	}
+
 	public GraphQLExecute(GraphQLSchema schema){
 		this.schema = schema;
 	}
@@ -122,7 +134,7 @@ public class GraphQLExecute {
 			throw new ExecuteException("entity.is.null");
 		}
 		
-		print(entity.getAlias());
+		print("\"", entity.getAlias(), "\"");
 		print(":");
 		
 		String fieldName = entity.getName();
@@ -170,9 +182,11 @@ public class GraphQLExecute {
 	private void printScalarValue(Object obj, ScalarType objType){
 		if(objType == ScalarType.Date){
 			Date date = (Date)obj;
-			print("'", date.getTime(), "'");
+			print("\"", date.getTime(), "\"");
+		}else if(objType == ScalarType.String){
+			print("\"", obj, "\"");
 		}else{
-			print("'", obj, "'");
+			print(obj);
 		}
 	}
 	
@@ -237,7 +251,7 @@ public class GraphQLExecute {
 		}
 	}
 
-	
+	/*
 	private void printAllField(Object result, Type type) throws Exception {
 		if(result == null){
 			print("null");
@@ -313,7 +327,7 @@ public class GraphQLExecute {
 			names.add(field.getName());
 		}
 		return names.toArray(new String[names.size()]);
-	}
+	}*/
 
 	private ObjectField[] getTypeFields(Type t) {
 		ObjectField[] fields = null;

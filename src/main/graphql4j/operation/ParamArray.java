@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import graphql4j.exception.TransformException;
+import graphql4j.exception.ExecuteException;
 import graphql4j.type.ArrayType;
 import graphql4j.type.Type;
 
@@ -33,7 +33,7 @@ public class ParamArray extends ParamValue {
 	@Override
 	public Object getValue(Type tp) throws Exception {
 		if(!(tp instanceof ArrayType)){
-			throw new TransformException("not.match.list.type");
+			throw new ExecuteException("not.match.list.type");
 		}
 		ArrayType lt = (ArrayType)tp;
 		Type type = lt.getBaseType();

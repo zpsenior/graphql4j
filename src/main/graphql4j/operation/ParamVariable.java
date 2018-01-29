@@ -1,6 +1,6 @@
 package graphql4j.operation;
 
-import graphql4j.exception.TransformException;
+import graphql4j.exception.ExecuteException;
 import graphql4j.type.Type;
 
 public class ParamVariable extends ParamValue implements Comparable<ParamVariable>{
@@ -33,7 +33,7 @@ public class ParamVariable extends ParamValue implements Comparable<ParamVariabl
 	public Object getValue(Type tp) throws Exception {
 		Type type = arg.getType();
 		if(!tp.equals(type)){
-			throw new TransformException("diff.variable.type", arg.getName(), tp.getName(), type.getName());
+			throw new ExecuteException("diff.variable.type", arg.getName(), tp.getName(), type.getName());
 		}
 		return arg.getValue();
 	}

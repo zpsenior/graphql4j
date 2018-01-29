@@ -58,6 +58,8 @@ public class TestGraphQL {
 		
 		GraphQLExecute exec = new GraphQLExecute(schema);
 		
+		exec.setFormat(true);
+		
 		opt.bindValue("orderParams", "{ownerseq:12456,buyerseq:1036,keyword:'zhou.p',status:3,pageSize:34}");
 		opt.bindValue("userseq", 1024);
 		

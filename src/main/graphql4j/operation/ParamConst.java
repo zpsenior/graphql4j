@@ -1,7 +1,7 @@
 package graphql4j.operation;
 
 import graphql4j.Token;
-import graphql4j.exception.TransformException;
+import graphql4j.exception.ExecuteException;
 import graphql4j.type.ScalarType;
 import graphql4j.type.Type;
 
@@ -18,7 +18,7 @@ public class ParamConst extends ParamValue {
 
 	public Object getValue(Type tp)throws Exception {
 		if(!(tp instanceof ScalarType)){
-			throw new TransformException("not.match.scalar.type");
+			throw new ExecuteException("not.match.scalar.type");
 		}
 		ScalarType type = (ScalarType)tp;
 		return type.parseValue(value);

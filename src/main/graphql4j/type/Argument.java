@@ -17,7 +17,9 @@ public class Argument extends JObject implements Comparable<Argument>{
 		this.name = name;
 		this.type = type;
 		this.notNull = notNull;
-		this.defaultValue = defaultValue;
+		if(defaultValue != null && !"".equals(defaultValue)){
+			this.defaultValue = defaultValue;
+		}
 	}
 	
 	public String getName() {

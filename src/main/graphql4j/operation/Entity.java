@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import graphql4j.exception.IntrospectionException;
+import graphql4j.exception.ExecuteException;
 import graphql4j.type.Argument;
 import graphql4j.type.ObjectField;
 
@@ -131,22 +131,14 @@ public class Entity extends JObject implements Comparable<Entity>{
 	public Map<String, Object> getParamValues(ObjectField field)throws Exception{
 		Map<String, Object> values = new HashMap<String, Object>();
 		Object value;
-		Argument[] args = field.getArguments();
-		if(args == null){
-			return values;
-		}
-		for(Argument arg : args){
-			String name = arg.getName();
-			Param param = getParam(name);
-			if(param != null){
-				ParamValue pv = param.getParamValue();
-				value = pv.getValue(arg.getType());
-			}else{
-				value = arg.getDefaultValue();
-				if((value == null || "".equals(value)) && arg.isNotNull()){
-					throw new IntrospectionException("argument.is.not.null", arg.getName());
-				}
+		for(Param param : params){
+			ParamValue pv = param.getParamValue();
+			String name = param.getName();
+			Argument arg = field.getArgument(name);
+			if(arg == null){
+				throw new ExecuteException("can.not.find.argument", name);
 			}
+			value = pv.getValue(arg.getType());
 			values.put(name, value);
 		}
 		return values;

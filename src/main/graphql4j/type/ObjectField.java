@@ -6,8 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import graphql4j.JObject;
-import graphql4j.exception.BindException;
-import graphql4j.exception.TransformException;
+import graphql4j.exception.ExecuteException;
 
 public class ObjectField extends JObject implements Comparable<ObjectField>{
 	private String name;
@@ -64,22 +63,25 @@ public class ObjectField extends JObject implements Comparable<ObjectField>{
 			res = method.invoke(obj);
 		}else{
 			if(len != methodParams.length){
-				throw new BindException("diff.method.param.length");
+				throw new ExecuteException("diff.method.param.length");
 			}
 			res = method.invoke(obj, methodParams);
 		}
 		return res;
 	}
 	
-	public Object[] getMethodParams(Map<String, ?> params)throws Exception{
+	private Object[] getMethodParams(Map<String, ?> params)throws Exception{
 		List<Object> list = new ArrayList<Object>();
 		if(arguments != null){
 			for(Argument arg : arguments){
 				String name = arg.getName();
-				if(!params.containsKey(name)){
-					throw new TransformException("not.set.value.of.name", name);
-				}
 				Object value = params.get(name);
+				if(value == null){
+					value = arg.getDefaultValue();
+				}
+				if(value == null  && arg.isNotNull()){
+					throw new ExecuteException("argument.is.not.null", arg.getName());
+				}
 				list.add(value);
 			}
 		}
