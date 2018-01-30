@@ -1,7 +1,6 @@
 package graphql4j.engine;
 
 import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Date;
 //import java.util.HashSet;
@@ -74,17 +73,18 @@ public class GraphQLExecute {
 		this.schema = schema;
 	}
 
-	public String query(GraphQL.Operation operation, Object rootQuery)throws Exception{
+	public void query(GraphQL.Operation operation, Object rootQuery, PrintWriter pw)throws Exception{
 		Type rootType = schema.getType("Query");
-		return execute(operation, rootQuery, rootType);
+		execute(operation, rootQuery, rootType, pw);
 	}
 
-	public String mutation(GraphQL.Operation operation, Object rootQuery)throws Exception{
+	public void mutation(GraphQL.Operation operation, Object rootQuery, PrintWriter pw)throws Exception{
 		Type rootType = schema.getType("Mutation");
-		return execute(operation, rootQuery, rootType);
+		execute(operation, rootQuery, rootType, pw);
 	}
 
-	private String execute(GraphQL.Operation operation, Object rootQbj, Type rootType)throws Exception{
+	private void execute(GraphQL.Operation operation, Object rootQbj, Type rootType, PrintWriter pw)throws Exception{
+		this.pw = pw;
 		if(operation == null){
 			throw new ExecuteException("null.graphql.obj");
 		}
@@ -98,8 +98,6 @@ public class GraphQLExecute {
 		if(!rootQbj.getClass().getName().equals(rootType.getBindClass())){
 			throw new ExecuteException("root.obj.not.match.root.type");
 		}
-		StringWriter sw = new StringWriter();
-		pw = new PrintWriter(sw);
 		printStart("{");
 		Entity[] entities = operation.getEntities();
 		boolean first = true;
@@ -113,7 +111,6 @@ public class GraphQLExecute {
 		printEnd();
 		print("}");
 		pw.flush();
-		return sw.toString();
 	}
 	
 	private void printEntity(Entity entity, Object parent, Type parentType, Fragment[] fragments)throws Exception{

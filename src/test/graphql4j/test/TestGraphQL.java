@@ -2,6 +2,8 @@ package graphql4j.test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import graphql4j.operation.GraphQL;
 import graphql4j.operation.GraphQLBuilder;
@@ -62,10 +64,11 @@ public class TestGraphQL {
 		
 		opt.bindValue("orderParams", "{ownerseq:12456,buyerseq:1036,keyword:'zhou.p',status:3,pageSize:34}");
 		opt.bindValue("userseq", 1024);
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		exec.query(opt, rootQuery, pw);
 		
-		String res = exec.query(opt, rootQuery);
-		
-		System.out.println(res);
+		System.out.println(sw.toString());
 	}
 
 
