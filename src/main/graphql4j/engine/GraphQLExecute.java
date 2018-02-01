@@ -83,7 +83,7 @@ public class GraphQLExecute {
 		execute(operation, rootQuery, rootType, pw);
 	}
 
-	private void execute(GraphQL.Operation operation, Object rootQbj, Type rootType, PrintWriter pw)throws Exception{
+	public void execute(GraphQL.Operation operation, Object rootQbj, Type rootType, PrintWriter pw)throws Exception{
 		this.pw = pw;
 		if(operation == null){
 			throw new ExecuteException("null.graphql.obj");
