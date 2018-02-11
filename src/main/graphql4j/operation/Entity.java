@@ -16,6 +16,7 @@ public class Entity extends JObject implements Comparable<Entity>{
 	private String name;
 	private String alias;
 	private Param[] params = new Param[0];
+	private Directive[] directives = new Directive[0];
 	private Entity[] children = new Entity[0];
 	private Fragment inlineFragment = null;
 	private boolean fragment = false;
@@ -27,7 +28,7 @@ public class Entity extends JObject implements Comparable<Entity>{
 		this.inlineFragment = fr;
 	}
 	
-	public Entity(String name, String alias, Set<Param> params, Collection<Entity> entities){
+	public Entity(String name, String alias, Set<Param> params, Set<Directive> directives, Collection<Entity> entities){
 		this.name = name;
 		if(alias != null){
 			this.alias = alias;
@@ -36,6 +37,9 @@ public class Entity extends JObject implements Comparable<Entity>{
 		}
 		if(params != null && params.size() > 0){
 			this.params = params.toArray(new Param[params.size()]);
+		}
+		if(directives != null && directives.size() > 0){
+			this.directives = directives.toArray(new Directive[directives.size()]);
 		}
 		if(entities != null && entities.size() > 0){
 			this.children = entities.toArray(new Entity[entities.size()]);
@@ -76,6 +80,10 @@ public class Entity extends JObject implements Comparable<Entity>{
 		return params;
 	}
 
+	public final Directive[] getDirectives() {
+		return directives;
+	}
+
 	public void toString(StringBuffer sb){
 		if(fragment){
 			sb.append("...");
@@ -108,6 +116,16 @@ public class Entity extends JObject implements Comparable<Entity>{
 				first = false;
 			}
 			sb.append(")");
+		}
+		if(directives != null && directives.length > 0){
+			boolean first = true;
+			for(Directive directive : directives){
+				if(!first){
+					sb.append(" ");
+				}
+				directive.toString(sb);
+				first = false;
+			}
 		}
 		if(children != null && children.length > 0){
 			sb.append("{");

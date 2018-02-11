@@ -176,21 +176,34 @@ public class GraphQLBuilder {
 		String alias = null;
 		String name = reader.readName();
 		Set<Param> params = new HashSet<Param>();
+		Set<Directive> directives = new HashSet<Directive>();
 		Set<Entity> body = new HashSet<Entity>();
 		if(reader.checkPunctuator(":")){
 			alias = name;
 			name = reader.readName();
 		}
 		if(reader.checkPunctuator("(")){
-			buildEntityParams(reader, params);
+			buildParams(reader, params);
+		}
+		while(reader.lookDirective()){
+			directives.add(buildDirective(reader));
 		}
 		if(reader.checkPunctuator("{")){
 			buildEntities(reader, gql, body);
 		}
-		return new Entity(name, alias, params, body);
+		return new Entity(name, alias, params, directives, body);
+	}
+	
+	private Directive buildDirective(GraphQLReader reader)throws Exception{
+		Set<Param> params = new HashSet<Param>();
+		String name = reader.readDirective();
+		if(reader.checkPunctuator("(")){
+			buildParams(reader, params);
+		}
+		return new Directive(name, params);
 	}
 
-	private void buildEntityParams(GraphQLReader reader, Set<Param> params)throws Exception{
+	private void buildParams(GraphQLReader reader, Set<Param> params)throws Exception{
 		while(true){
 			if(reader.lookName()){
 				Param param = buildEntityParam(reader);

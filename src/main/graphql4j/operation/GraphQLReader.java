@@ -26,6 +26,15 @@ public class GraphQLReader extends TokenReader{
 		return tmpTokens;
 	}
 	
+	public boolean checkDirective(String str)throws Exception{
+		Token t = readToken();
+		if(str.equals(t.getName()) && Token.TOKEN_TYPE_DIRECTIVE == t.getType()){
+			return true;
+		}
+		forward(-1);
+		return false;
+	}
+	
 	public boolean lookDirective(String str)throws Exception{
 		Token t = readToken();
 		forward(-1);
@@ -35,10 +44,27 @@ public class GraphQLReader extends TokenReader{
 		return false;
 	}
 	
+	public boolean lookDirective()throws Exception{
+		Token t = readToken();
+		forward(-1);
+		if(Token.TOKEN_TYPE_DIRECTIVE == t.getType()){
+			return true;
+		}
+		return false;
+	}
+	
 	public final void readDirective(String str)throws Exception{
 		Token t = readToken();
 		if(str.equals(t.getName()) && Token.TOKEN_TYPE_DIRECTIVE== t.getType()){
 			return ;
+		}
+		throw new TokenException("unexpect.token", t);
+	}
+	
+	public final String readDirective()throws Exception{
+		Token t = readToken();
+		if(Token.TOKEN_TYPE_DIRECTIVE== t.getType()){
+			return t.getName();
 		}
 		throw new TokenException("unexpect.token", t);
 	}
