@@ -2,10 +2,15 @@ package graphql4j.type;
 
 import java.lang.reflect.Method;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import graphql4j.JObject;
 import graphql4j.exception.TransformException;
 
 public class InputObjectField extends JObject implements Comparable<InputObjectField>{
+	
+	private static Logger log = LogManager.getLogger(InputObjectField.class);
 	
 	private String name;
 	private Type type;
@@ -48,7 +53,12 @@ public class InputObjectField extends JObject implements Comparable<InputObjectF
 	}
 	
 	public void invokeSet(Object obj, Object params)throws Exception{
-		method.invoke(obj, params);
+		try{
+			method.invoke(obj, params);
+		}catch(Exception e) {
+			log.error("invoke " + method.getName() + " error, params: " + params);
+			throw e;
+		}
 	}
 
 	public int compareTo(InputObjectField o) {

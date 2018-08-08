@@ -260,7 +260,7 @@ public class GraphQL {
 		} else if (type instanceof InterfaceType) {
 			field = ((InterfaceType) type).getField(name);
 		} else {
-			throw new IntrospectionException("un.surpport.type", type.getName());
+			throw new IntrospectionException("unsupport.type", type.getName(), entity.getName());
 		}
 		if (field == null) {
 			throw new IntrospectionException("not.find.field.name.in.type",
@@ -299,7 +299,7 @@ public class GraphQL {
 					type.getName());
 
 		} else {
-			throw new IntrospectionException("un.surpport.type", type.getName());
+			throw new IntrospectionException("unsupport.type", type.getName(), entity.getName());
 		}
 	}
 

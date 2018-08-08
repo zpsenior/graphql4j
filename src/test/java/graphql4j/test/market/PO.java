@@ -10,7 +10,7 @@ import java.util.Map;
 
 public abstract class PO {
 	
-	protected static final String bucket = "comcircle";
+	protected static final String bucket = "test";
 	protected static final String endPoint = "img-cn-shenzhen.aliyuncs.com";
 	
 	private static String img_prefix = null;
@@ -26,7 +26,7 @@ public abstract class PO {
 	}
 	
 	static{
-		img_prefix = System.getenv("CHAIN_IMG_PREFIX");
+		img_prefix = System.getenv("TEST_IMG_PREFIX");
 	}
 	
 	private final static int SECOND_OF_MINUTE = 60;

@@ -176,7 +176,7 @@ public class GraphQLSchemaLoader implements TypeFinder {
 		String name;
 		GraphQLObject gqlObject = cls.getAnnotation(GraphQLObject.class);
 		if(cls.isEnum()||cls.isInterface()){
-				throw new BindException("interface.or.enum.can.not.be.bind.type");
+				throw new BindException("interface.or.enum.can.not.be.bind.type", cls.getName());
 		}
 		Set<String> impls = getInterfaceName(cls);
 		name = getSimpleName(cls, gqlObject.value());
@@ -243,7 +243,7 @@ public class GraphQLSchemaLoader implements TypeFinder {
 		try{
 			cls.newInstance();
 		}catch(Throwable e){
-			throw new BindException("input.object.type.must.bind.object.can.be.created.with.no.params");
+			throw new BindException("input.object.type.must.bind.object.can.be.created.with.no.params", cls.getName());
 		}
 		return new InputObjectType(name, cls.getName(), fields);
 	}

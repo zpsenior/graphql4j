@@ -159,21 +159,30 @@ public class GraphQLExecute {
 		}else if(fieldType instanceof EnumType){
 			printEnumValue(result, (EnumType)fieldType);
 			return ;
-		}else if(children == null || children.length <= 0){
-			/*printAllField(result, fieldType);
-			return ;*/
-			throw new ExecuteException("can.not.print.all.object.entity.field", fieldName);
-		}
-		
-		if(result instanceof Collection){
-			Collection<?> collections = (Collection<?>)result;
-			printArrayValue(children, collections.toArray(), fieldType, fragments);
-		}else if(result.getClass().isArray()){
-			Object[] array = (Object[])result;
-			printArrayValue(children, array, fieldType, fragments);
-		}else{
+		}else if(fieldType instanceof ArrayType){
+			Object[] array;
+			if(result instanceof Collection){
+				array = ((Collection<?>)result).toArray();
+			}else if(result.getClass().isArray()) {
+				array = (Object[])result;
+			}else {
+				throw new ExecuteException("object.not.match.array.type", fieldName);
+			}
+			Type bt = ((ArrayType)fieldType).getBaseType();
+			if((children == null || children.length <= 0) && bt instanceof ScalarType) {
+				printScalarTypeArrayValue(array, bt);
+			}else {
+				printArrayValue(children, array, fieldType, fragments);
+			}
+			return;
+			
+		}else if(children != null && children.length > 0){
 			printObjectValue(children, result, fieldType, fragments);
+			return;
 		}
+		/*printAllField(result, fieldType);
+		return ;*/
+		throw new ExecuteException("can.not.print.all.object.entity.field", fieldName);
 	}
 	
 	private void printScalarValue(Object obj, ScalarType objType){
@@ -189,6 +198,20 @@ public class GraphQLExecute {
 	
 	private void printEnumValue(Object obj, EnumType objType){
 		print("'", obj, "'");
+	}
+
+	private void printScalarTypeArrayValue(Object[] array, Type bt) {
+		printStart("[");
+		boolean first = true;
+		for(Object o : array) {
+			if(!first){
+				println(", ");
+			}
+			printScalarValue(o, (ScalarType)bt);
+			first = false;
+		}
+		printEnd();
+		print("]");
 	}
 	
 	private void printArrayValue(Entity[] entitis, Object[] array, Type arrayType, Fragment[] fragments)throws Exception{
