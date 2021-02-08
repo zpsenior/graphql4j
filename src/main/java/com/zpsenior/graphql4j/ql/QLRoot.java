@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.zpsenior.graphql4j.JoinExecutor;
 import com.zpsenior.graphql4j.ParamFinder;
+import com.zpsenior.graphql4j.exception.CompileException;
 import com.zpsenior.graphql4j.schema.Schema;
 
 public class QLRoot {
@@ -14,10 +15,10 @@ public class QLRoot {
 	
 	private Map<String, Entry> entries = new HashMap<>();
 	
-	public void add(Entry entry) {
+	protected void add(Entry entry)throws Exception {
 		String name = entry.getName();
 		if(entries.containsKey(name)) {
-			throw new RuntimeException("entry(" + name + ") had been included");
+			throw new CompileException("entry(" + name + ") had been included");
 		}
 		entries.put(name, entry);
 	}

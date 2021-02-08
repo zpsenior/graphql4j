@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zpsenior.graphql4j.Utils;
+import com.zpsenior.graphql4j.exception.BindException;
 import com.zpsenior.graphql4j.schema.Member;
 import com.zpsenior.graphql4j.schema.Schema;
 import com.zpsenior.graphql4j.schema.TypeConfig;
@@ -107,16 +108,16 @@ public class Element implements Comparable<Element>{
 		return values;
 	}
 
-	public void bind(Schema schema, TypeConfig parent) {
+	public void bind(Schema schema, TypeConfig parent)throws Exception {
 		Member member = parent.getMemberByName(name);
 		if(member == null) {
-			throw new RuntimeException("can not find :" + name + " in " + parent.getName());
+			throw new BindException("can not find :" + name + " in " + parent.getName());
 		}
 		if(member.isMethod()) {
 			for(ElementArgument arg : arguments) {
 				String name = arg.getName();
 				if(!member.containsParam(name)) {
-					throw new RuntimeException("can not find param(" + name + ") in " + parent.getName());
+					throw new BindException("can not find param(" + name + ") in " + parent.getName());
 				}
 			}
 		}
@@ -124,7 +125,7 @@ public class Element implements Comparable<Element>{
 		if(children != null && children.length > 0) {
 			Class<?> valueType = member.getValueType();
 			if(Utils.isScalarType(valueType)) {
-				throw new RuntimeException("scalar type can not be split!");
+				throw new BindException("scalar type can not be split!");
 			}
 			if(Utils.isListType(valueType)) {
 				valueType = valueType.getTypeParameters()[0].getClass();

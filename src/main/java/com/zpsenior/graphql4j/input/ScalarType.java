@@ -1,7 +1,5 @@
 package com.zpsenior.graphql4j.input;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -62,40 +60,7 @@ public class ScalarType implements InputType {
 	private ScalarType(String name){
 		this.name = name;
 	}
-
-	@Override
-	public Object parseValue(String value)throws Exception {
-		if(value == null){
-			return null;
-		}
-		if(TYPE_BOOLEAN.equals(name)){
-			return java.lang.Boolean.parseBoolean(value);
-		}else if(TYPE_INT.equals(name)){
-			return java.lang.Integer.parseInt(value);
-		}else if(TYPE_LONG.equals(name)){
-			return java.lang.Long.parseLong(value);
-		}else if(TYPE_FLOAT.equals(name)){
-			return java.lang.Float.parseFloat(value);
-		}else if(TYPE_DOUBLE.equals(name)){
-			return java.lang.Double.parseDouble(value);
-		}else if(TYPE_STRING.equals(name)){
-			return value;
-		}else if(TYPE_SHORT.equals(name)){
-			return java.lang.Short.parseShort(value);
-		}else if(TYPE_CHAR.equals(name)){
-			return (char)(Integer.parseInt(value));
-		}else if(TYPE_BYTE.equals(name)){
-			return java.lang.Byte.parseByte(value);
-		}else if(TYPE_DATE.equals(name)){
-			DateFormat df = new SimpleDateFormat("yyyyMMdd");
-			return df.parse(value);
-		}else if(TYPE_BIGINT.equals(name)){
-			return new java.math.BigInteger(value);
-		}else if(TYPE_BIGDECIMAL.equals(name)){
-			return new java.math.BigDecimal(value);
-		}
-		throw new RuntimeException("can not find type:" + name);
-	}
+	
 	
 	public static ScalarType getType(String name) {
 		for(String type :types.keySet()) {
@@ -104,6 +69,10 @@ public class ScalarType implements InputType {
 			}
 		}
 		return null;
+	}
+	
+	public static ScalarType getType(Class<?> cls) {
+		return getType(cls.getSimpleName());
 	}
 
 }

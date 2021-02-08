@@ -16,12 +16,12 @@ public class ArrayValue extends Value {
 	public Object getValue(QLContext context) {
 		Object[] values = new Object[array.length];
 		int i = 0;
-		for(Value val : array) {
+		for(Value val : this.array) {
 			Object value = val.getValue(context);
 			values[i] = value;
 			i++;
 		}
-		return values;
+		return array;
 	}
 
 }

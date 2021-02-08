@@ -19,7 +19,7 @@ public class ElementArgument implements Comparable<ElementArgument>{
 	public Object getValue(QLContext context) {
 		return value.getValue(context);
 	}
-	
+
 	@Override
 	public int compareTo(ElementArgument target) {
 		return name.compareTo(target.name);

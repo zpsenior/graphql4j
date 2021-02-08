@@ -1,13 +1,14 @@
 package com.zpsenior.graphql4j.schema;
 
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.zpsenior.graphql4j.annotation.Field;
 import com.zpsenior.graphql4j.annotation.Join;
+import com.zpsenior.graphql4j.exception.TypeException;
 
 public class TypeConfig {
 	
@@ -15,7 +16,7 @@ public class TypeConfig {
 	private Class<?> typeClass;
 	private Map<String, Member> members = null;
 
-	public TypeConfig(String name, Class<?> typeClass) {
+	public TypeConfig(String name, Class<?> typeClass)throws Exception {
 		this.name = name;
 		this.typeClass = typeClass;
 		if(typeClass.isEnum()) {
@@ -41,23 +42,22 @@ public class TypeConfig {
 		return members.values().toArray(new Member[members.size()]);
 	}
 	
-	private void scanMethod(Class<?> cls) {
-		Arrays.stream(cls.getMethods())
-		.forEach((method)->{
+	private void scanMethod(Class<?> cls) throws Exception{
+		for(Method method : cls.getMethods()){
 			Field field = method.getAnnotation(Field.class);
 			if(field == null) {
-				return;
+				continue;
 			}
 			String[] names = field.value();
 			int mod = method.getModifiers();
 			if(!Modifier.isPublic(mod)) {
-				throw new RuntimeException("method(" + name + ") must be public");
+				throw new TypeException("method(" + name + ") must be public");
 			}
 			if(Modifier.isStatic(mod)) {
-				throw new RuntimeException("method(" + name + ") can not be static");
+				throw new TypeException("method(" + name + ") can not be static");
 			}
 			if(method.getReturnType() == Void.class) {
-				throw new RuntimeException("method(" + name + ")`s returnType is void");
+				throw new TypeException("method(" + name + ")`s returnType is void");
 			}
 			if(names == null || names.length <= 0) {
 				names = new String[] {method.getName()};
@@ -65,23 +65,22 @@ public class TypeConfig {
 			for(String name : names) {
 				addMember(method, name);
 			}
-		});
+		}
 	}
 	
-	private void scanField(Class<?> cls) {
-		Arrays.stream(cls.getFields())
-		.forEach((field)->{
+	private void scanField(Class<?> cls)throws Exception {
+		for(java.lang.reflect.Field field : cls.getFields()){
 			Field fld = field.getAnnotation(Field.class);
 			if(fld == null) {
-				return;
+				continue;
 			}
 			String[] names = fld.value();	
 			int mod = field.getModifiers();
 			if(Modifier.isFinal(mod)) {
-				throw new RuntimeException("field(" + name + ") can not be final");
+				throw new TypeException("field(" + name + ") can not be final");
 			}
 			if(Modifier.isStatic(mod)) {
-				throw new RuntimeException("field(" + name + ") can not be static");
+				throw new TypeException("field(" + name + ") can not be static");
 			}
 			if(names == null || names.length <= 0) {
 				names = new String[] {field.getName()};
@@ -89,22 +88,21 @@ public class TypeConfig {
 			for(String name : names) {
 				addMember(field, name);
 			}
-		});
+		}
 	}
-	private void scanJoin(Class<?> cls) {
-		Arrays.stream(cls.getFields())
-		.forEach((field)->{
+	private void scanJoin(Class<?> cls)throws Exception {
+		for(java.lang.reflect.Field field : cls.getFields()) {
 			Join join = field.getAnnotation(Join.class);
 			if(join == null) {
-				return;
+				continue;
 			}
 			String[] names = join.value();	
 			int mod = field.getModifiers();
 			if(Modifier.isFinal(mod)) {
-				throw new RuntimeException("field(" + name + ") can not be final");
+				throw new TypeException("field(" + name + ") can not be final");
 			}
 			if(Modifier.isStatic(mod)) {
-				throw new RuntimeException("field(" + name + ") can not be static");
+				throw new TypeException("field(" + name + ") can not be static");
 			}
 
 			if(names == null || names.length <= 0) {
@@ -113,15 +111,15 @@ public class TypeConfig {
 			for(String name : names) {
 				addMember(field, name);
 			}
-		});
+		}
 	}
 
-	private void addMember(AccessibleObject access, String name) {
+	private void addMember(AccessibleObject access, String name) throws Exception{
 		if(members == null) {
 			members = new HashMap<>();
 		}
 		if(members.containsKey(name)) {
-			throw new RuntimeException("duplicate name:" + name);
+			throw new TypeException("duplicate name:" + name);
 		}
 		Member member = new Member(access);
 		members.put(name, member);

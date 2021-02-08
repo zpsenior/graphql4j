@@ -3,12 +3,12 @@ package com.zpsenior.graphql4j.schema;
 import java.util.List;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.zpsenior.graphql4j.Utils;
 import com.zpsenior.graphql4j.annotation.Type;
+import com.zpsenior.graphql4j.exception.TypeException;
 
 public class Schema {
 	
@@ -17,21 +17,21 @@ public class Schema {
 	
 	private Map<String, TypeConfig> configs = new HashMap<>();
 	
-	public Schema(Object query, Object mutation) {
+	public Schema(Object query, Object mutation)throws Exception {
 		this.query = query;
 		this.mutation = mutation;
 		
 		init(query.getClass(), mutation.getClass());
 	}
 
-	private void init(Class<?> clsQuery, Class<?> clsMutation) {
+	private void init(Class<?> clsQuery, Class<?> clsMutation)throws Exception {
 		TypeConfig config = buildTypeConfig(clsQuery);
 		if(config == null || !"Query".equals(config.getName())) {
-			throw new RuntimeException(clsQuery.getName() + " is not Query!");
+			throw new TypeException(clsQuery.getName() + " is not Query!");
 		}
 		config = buildTypeConfig(clsMutation);
 		if(config == null || !"Mutation".equals(config.getName())) {
-			throw new RuntimeException(clsMutation.getName() + " is not Mutation!");
+			throw new TypeException(clsMutation.getName() + " is not Mutation!");
 		}
 	}
 	
@@ -45,15 +45,14 @@ public class Schema {
 		return mutation;
 	}
 
-	private TypeConfig buildTypeConfig(Class<?> cls) {
+	private TypeConfig buildTypeConfig(Class<?> cls)throws Exception {
 		String typeName = getTypeName(cls);
 		if(configs.containsKey(typeName)) {
 			return null;
 		}
 		TypeConfig config = new TypeConfig(typeName, cls);
 		configs.put(typeName, config);
-		Arrays.stream(config.getMembers())
-		.forEach((member)->{
+		for(Member member : config.getMembers()){
 			Class<?> valueType;
 			if(member.isMethod()) {
 				Method method = (Method)member.getAccess();
@@ -69,10 +68,10 @@ public class Schema {
 				valueType = valueType.getTypeParameters()[0].getClass();
 			}
 			if(Utils.isScalarType(valueType)) {
-				return;
+				continue;
 			}
 			buildTypeConfig(valueType);
-		});
+		}
 		return config;
 	}
 	
@@ -80,19 +79,19 @@ public class Schema {
 		return configs.get(name);
 	}
 
-	public TypeConfig getTypeConfig(Class<?> cls) {
+	public TypeConfig getTypeConfig(Class<?> cls) throws Exception{
 		String typeName = getTypeName(cls);
 		TypeConfig config = getTypeConfig(typeName);
 		if(config == null) {
-			throw new RuntimeException("can not find type:" + typeName);
+			throw new TypeException("can not find type:" + typeName);
 		}
 		return config;
 	}
 
-	private String getTypeName(Class<?> cls) {
+	private String getTypeName(Class<?> cls) throws Exception{
 		Type type = cls.getAnnotation(Type.class);
 		if(type == null) {
-			throw new RuntimeException(cls.getName() + " is not annotated by Type!");
+			throw new TypeException(cls.getName() + " is not annotated by Type!");
 		}
 		String typeName = type.value();
 		if(typeName == null || "".equals(typeName)) {

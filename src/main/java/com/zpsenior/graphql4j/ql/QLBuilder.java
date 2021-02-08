@@ -1,38 +1,53 @@
 package com.zpsenior.graphql4j.ql;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import com.zpsenior.graphql4j.exception.CompileException;
+import com.zpsenior.graphql4j.input.ArrayType;
+import com.zpsenior.graphql4j.input.InputFinder;
 import com.zpsenior.graphql4j.input.InputType;
+import com.zpsenior.graphql4j.input.NameType;
 import com.zpsenior.graphql4j.input.NotNullType;
 import com.zpsenior.graphql4j.input.ScalarType;
+import com.zpsenior.graphql4j.parser.Token;
 import com.zpsenior.graphql4j.value.ArrayValue;
 import com.zpsenior.graphql4j.value.ConstValue;
 import com.zpsenior.graphql4j.value.ObjectValue;
 import com.zpsenior.graphql4j.value.Value;
 import com.zpsenior.graphql4j.value.VariableValue;
 
+
 public class QLBuilder {
+	
+	private InputFinder finder;
 
-	public void build(QLReader reader, QLRoot root)throws Exception{
-
+	public void build(QLReader reader, InputFinder finder, QLRoot root)throws Exception{
+		this.finder = finder;
 		Entry entry;
 		while(true) {
 			if(reader.checkName("query")) {
 				entry = buildEntry(reader, EntryKind.Query);
 			}else if(reader.checkName("mutation")) {
 				entry = buildEntry(reader, EntryKind.Mutation);
-			}else if(reader.checkName("subscription")) {
-				entry = buildEntry(reader, EntryKind.SUBSCRIPTION);
+			//}else if(reader.checkName("subscription")) {
+			//	entry = buildEntry(reader, EntryKind.SUBSCRIPTION);
 			}else {
-				throw new RuntimeException("unexpect token :" + reader.lookahead(-1));
+				throw new CompileException("unexpect token :" + reader.lookahead(-1));
 			}
 			root.add(entry);
 		}
 	}
+	
+	private Set<String> vars = new HashSet<>();
 
 	private Entry buildEntry(QLReader reader, EntryKind kind)throws Exception {
+		vars.clear();
 		String name = reader.readName();
 		Set<EntryArgument> arguments = new HashSet<>();
 		if(reader.checkPunctuator("(")){
@@ -47,7 +62,7 @@ public class QLBuilder {
 	
 	private void buildArguments(QLReader reader, Set<EntryArgument> arguments)throws Exception{
 		while(true){
-			if(reader.lookVar()){
+			if(reader.lookName()){
 				EntryArgument arg = buildArgument(reader);
 				arguments.add(arg);
 				continue;
@@ -59,33 +74,48 @@ public class QLBuilder {
 	
 	private EntryArgument buildArgument(QLReader reader)throws Exception{
 		Value defaultValue = null;
-		String name = reader.readVar();
+		String name = reader.readName();
 		reader.readPunctuator(":");
 		InputType type = buildInputType(reader);
 		if(reader.checkPunctuator("!")){
 			type = new NotNullType(type);
 		}
 		if(reader.checkPunctuator("=")){
-			defaultValue = buildParamValue(reader);
+			defaultValue = buildDefaultValue(reader);
 		}
+		if(vars.contains(name)) {
+			throw new CompileException("duplication variable", name);
+		}
+		vars.add(name);
 		return new EntryArgument(name, type, defaultValue);
 	}
 
-	private InputType buildInputType(QLReader reader) {
-		String name = reader.readName();
-		InputType it = ScalarType.getType(name);
-		if(it == null) {
-			
+	private InputType buildInputType(QLReader reader) throws Exception{
+		InputType it;
+		if(reader.checkPunctuator("[")){
+			it = buildArrayType(reader);
+		}else{
+			String name = reader.readName();
+			ScalarType st = ScalarType.getType(name);
+			if(st != null) {
+				return st;
+			}
+			Class<?> cls = finder.findClass(name);
+			it = new NameType(name, cls);
 		}
 		return it;
 	}
-
-	private Value buildParamValue(QLReader reader) {
-		// TODO Auto-generated method stub
-		return null;
+	
+	private ArrayType buildArrayType(QLReader reader)throws Exception{
+		InputType type = buildInputType(reader);
+		if(reader.checkPunctuator("!")){
+			type = new NotNullType(type);
+		}
+		reader.readPunctuator("]");
+		return new ArrayType(type);
 	}
 
-	private void buildElements(QLReader reader, Set<Element> elements) {
+	private void buildElements(QLReader reader, Set<Element> elements) throws Exception{
 		while(true){
 			if(reader.lookName()){
 				Element ele = buildElement(reader);
@@ -97,7 +127,7 @@ public class QLBuilder {
 		reader.readPunctuator("}");
 	}
 
-	private Element buildElement(QLReader reader) {
+	private Element buildElement(QLReader reader)throws Exception {
 		String alias = null;
 		String name = reader.readName();
 		Set<ElementArgument> params = new HashSet<ElementArgument>();
@@ -115,10 +145,13 @@ public class QLBuilder {
 		return new Element(name, alias, params, children);
 	}
 
-	private void buildParams(QLReader reader, Set<ElementArgument> params) {
+	private void buildParams(QLReader reader, Set<ElementArgument> params)throws Exception {
 		while(true){
 			if(reader.lookName()){
-				ElementArgument param = buildParam(reader);
+				String name = reader.readName();
+				reader.readPunctuator(":");
+				Value value = buildValue(reader);
+				ElementArgument param = new ElementArgument(name, value);
 				params.add(param);
 				continue;
 			}
@@ -127,41 +160,71 @@ public class QLBuilder {
 		reader.readPunctuator(")");
 	}
 
-	private ElementArgument buildParam(QLReader reader) {
+	private Value buildDefaultValue(QLReader reader)throws Exception {
 		Value value;
-		String name = reader.readName();
-		reader.readPunctuator(":");
 		if(reader.checkPunctuator("[")){
-			value = buildArrayValue(reader);
+			value = buildArrayValue(reader, true);
 			reader.readPunctuator("]");
 		}else if(reader.checkPunctuator("{")){
-			value = buildObjectValue(reader);
+			value = buildObjectValue(reader, true);
+			reader.readPunctuator("}");
+		}else {
+			value = buildConstValue(reader);
+		}
+		return value;
+	}
+
+	private Value buildValue(QLReader reader) throws Exception{
+		Value value;
+		if(reader.checkPunctuator("[")){
+			value = buildArrayValue(reader, false);
+			reader.readPunctuator("]");
+		}else if(reader.checkPunctuator("{")){
+			value = buildObjectValue(reader, false);
 			reader.readPunctuator("}");
 		}else if(reader.checkPunctuator("$")){
 			value = buildVariableValue(reader);
-		}else{
+		}else {
 			value = buildConstValue(reader);
 		}
-		return new ElementArgument(name, value);
+		return value;
 	}
 
-	private ConstValue buildConstValue(QLReader reader) {
-		// TODO Auto-generated method stub
-		return null;
+	private ConstValue buildConstValue(QLReader reader) throws Exception{
+		Token t = reader.readToken();
+		return new ConstValue(t.getContent());
 	}
 
-	private VariableValue buildVariableValue(QLReader reader) {
-		// TODO Auto-generated method stub
-		return null;
+	private VariableValue buildVariableValue(QLReader reader) throws Exception{
+		String varName = reader.readName();
+		if(!vars.contains(varName)) {
+			throw new CompileException("not define variable", varName);
+		}
+		return new VariableValue(varName);
 	}
 
-	private ObjectValue buildObjectValue(QLReader reader) {
-		// TODO Auto-generated method stub
-		return null;
+	private ObjectValue buildObjectValue(QLReader reader, boolean notVariable)throws Exception {
+		Value value;
+		Map<String, Value> values = new HashMap<>();
+		while(reader.lookName()){
+			String varName = reader.readName();
+			reader.readPunctuator(":");
+			value = notVariable? buildDefaultValue(reader) : buildValue(reader);
+			values.put(varName, value);
+		}
+		return new ObjectValue(values);
 	}
 
-	private ArrayValue buildArrayValue(QLReader reader) {
-		// TODO Auto-generated method stub
-		return null;
+	private ArrayValue buildArrayValue(QLReader reader, boolean notVariable) throws Exception{
+		Value value;
+		List<Value> values = new ArrayList<Value>();
+		while(true){
+			value = notVariable? buildDefaultValue(reader) : buildValue(reader);
+			if(value == null) {
+				break;
+			}
+			values.add(value);
+		}
+		return new ArrayValue(values);
 	}
 }

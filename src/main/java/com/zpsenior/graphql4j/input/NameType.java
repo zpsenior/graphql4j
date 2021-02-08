@@ -3,19 +3,20 @@ package com.zpsenior.graphql4j.input;
 public class NameType implements InputType {
 	
 	private String name;
+	private Class<?> bindClass;
 	
-	public NameType(String name) {
+	public NameType(String name, Class<?> bindClass) {
 		this.name = name;
+		this.bindClass = bindClass;
 	}
 
 	public String getName() {
 		return name;
 	}
 
-	@Override
-	public Object parseValue(String value) {
-		// TODO Auto-generated method stub
-		return null;
+	public Class<?> getBindClass() {
+		return bindClass;
 	}
 
+	
 }

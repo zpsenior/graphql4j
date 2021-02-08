@@ -12,12 +12,4 @@ public class NotNullType implements InputType {
 		return baseType;
 	}
 
-	@Override
-	public Object parseValue(String value)throws Exception {
-		if(value == null) {
-			throw new RuntimeException("value can not be null");
-		}
-		return baseType.parseValue(value);
-	}
-
 }

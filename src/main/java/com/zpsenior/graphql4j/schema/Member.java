@@ -7,8 +7,10 @@ import java.lang.reflect.Parameter;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zpsenior.graphql4j.TypeConversion;
 import com.zpsenior.graphql4j.annotation.Join;
 import com.zpsenior.graphql4j.annotation.Variable;
+import com.zpsenior.graphql4j.exception.ExecuteException;
 
 public class Member{
 	
@@ -58,16 +60,19 @@ public class Member{
 	
 	public Object invoke(Object inst, Map<String, Object> paramValues)throws Exception {
 		if(joinMethod != null) {
-			throw new RuntimeException("join field(" + ((Field)access).getName() + ") can not be invoked");
+			throw new ExecuteException("join field(" + ((Field)access).getName() + ") can not be invoked");
 		}
 		if(access instanceof Method) {
+			Method method = (Method)access;
+			Parameter[] parameters = method.getParameters();
 			Object[] values = new Object[params.size()];
 			for(String name : params.keySet()) {
 				Object value = paramValues.get(name);
 				int idx = params.get(name);
-				values[idx] = value;
+				Class<?> paramClass = parameters[idx].getType();
+				values[idx] = TypeConversion.conversion(paramClass, value);
 			}
-			return ((Method)access).invoke(inst, values);
+			return method.invoke(inst, values);
 		}
 		return ((Field)access).get(inst);
 	}
