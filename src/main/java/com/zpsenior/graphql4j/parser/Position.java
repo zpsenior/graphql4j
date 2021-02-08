@@ -41,4 +41,9 @@ public class Position {
 		row++;
 	}
 
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		sb.append("(pos:").append(pos).append(",row:").append(row).append(",col:").append(col).append(")");
+		return sb.toString();
+	}
 }

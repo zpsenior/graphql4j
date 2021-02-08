@@ -1,5 +1,6 @@
 package com.zpsenior.graphql4j.ql;
 
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,20 +28,24 @@ public class QLBuilder {
 	
 	private InputFinder finder;
 
-	public void build(QLReader reader, InputFinder finder, QLRoot root)throws Exception{
+	public void build(Reader rd, InputFinder finder, QLRoot root)throws Exception{
+		QLReader reader = new QLReader(rd);
 		this.finder = finder;
 		Entry entry;
 		while(true) {
-			if(reader.checkName("query")) {
+			if(reader.checkKeyword("query")) {
 				entry = buildEntry(reader, EntryKind.Query);
-			}else if(reader.checkName("mutation")) {
+			}else if(reader.checkKeyword("mutation")) {
 				entry = buildEntry(reader, EntryKind.Mutation);
-			//}else if(reader.checkName("subscription")) {
+			//}else if(reader.checkKeyword("subscription")) {
 			//	entry = buildEntry(reader, EntryKind.SUBSCRIPTION);
 			}else {
-				throw new CompileException("unexpect token :" + reader.lookahead(-1));
+				throw new CompileException("unexpect token :" + reader.lookahead(0));
 			}
 			root.add(entry);
+			if(reader.eof()) {
+				break;
+			}
 		}
 	}
 	
@@ -62,9 +67,9 @@ public class QLBuilder {
 	
 	private void buildArguments(QLReader reader, Set<EntryArgument> arguments)throws Exception{
 		while(true){
-			if(reader.lookName()){
-				EntryArgument arg = buildArgument(reader);
-				arguments.add(arg);
+			EntryArgument arg = buildArgument(reader);
+			arguments.add(arg);
+			if(reader.checkPunctuator(",")) {
 				continue;
 			}
 			break;
@@ -74,6 +79,7 @@ public class QLBuilder {
 	
 	private EntryArgument buildArgument(QLReader reader)throws Exception{
 		Value defaultValue = null;
+		reader.readPunctuator("$");
 		String name = reader.readName();
 		reader.readPunctuator(":");
 		InputType type = buildInputType(reader);
@@ -117,9 +123,9 @@ public class QLBuilder {
 
 	private void buildElements(QLReader reader, Set<Element> elements) throws Exception{
 		while(true){
-			if(reader.lookName()){
-				Element ele = buildElement(reader);
-				elements.add(ele);
+			Element ele = buildElement(reader);
+			elements.add(ele);
+			if(reader.checkPunctuator(",")){
 				continue;
 			}
 			break;
@@ -147,12 +153,12 @@ public class QLBuilder {
 
 	private void buildParams(QLReader reader, Set<ElementArgument> params)throws Exception {
 		while(true){
-			if(reader.lookName()){
-				String name = reader.readName();
-				reader.readPunctuator(":");
-				Value value = buildValue(reader);
-				ElementArgument param = new ElementArgument(name, value);
-				params.add(param);
+			String name = reader.readName();
+			reader.readPunctuator(":");
+			Value value = buildValue(reader);
+			ElementArgument param = new ElementArgument(name, value);
+			params.add(param);
+			if(reader.checkPunctuator(",")){
 				continue;
 			}
 			break;
@@ -206,11 +212,15 @@ public class QLBuilder {
 	private ObjectValue buildObjectValue(QLReader reader, boolean notVariable)throws Exception {
 		Value value;
 		Map<String, Value> values = new HashMap<>();
-		while(reader.lookName()){
+		while(true){
 			String varName = reader.readName();
 			reader.readPunctuator(":");
 			value = notVariable? buildDefaultValue(reader) : buildValue(reader);
 			values.put(varName, value);
+			if(reader.checkPunctuator(",")) {
+				continue;
+			}
+			break;
 		}
 		return new ObjectValue(values);
 	}

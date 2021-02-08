@@ -35,7 +35,9 @@ public class TokenParser extends TextParser {
 			if(content.startsWith("\"") && content.endsWith("\"")) {
 				type = TokenType.TOKEN_TYPE_QUOTE;
 				content = content.substring(1, content.length() - 1);
-			}else {
+			}else if(content.startsWith("#")){
+				return;
+			} else {
 				type = TokenType.TOKEN_TYPE_NAME;
 			}
 		}

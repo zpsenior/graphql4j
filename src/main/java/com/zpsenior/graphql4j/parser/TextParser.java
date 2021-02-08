@@ -36,7 +36,7 @@ public abstract class TextParser {
 	
 	StringBuffer sb = new StringBuffer();
 
-	private Position pos;
+	private Position pos = new Position();
 	
 	private char save = 0XFF;
 	

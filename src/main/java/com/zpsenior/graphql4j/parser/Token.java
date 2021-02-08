@@ -33,4 +33,11 @@ public class Token {
 	public int getRow() {
 		return pos.getRow();
 	}
+	
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		//sb.append(pos);
+		sb.append("->【").append(content).append("】");
+		return sb.toString();
+	}
 }
