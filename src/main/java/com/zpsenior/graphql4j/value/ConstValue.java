@@ -25,5 +25,11 @@ public class ConstValue extends Value {
 	public Object getValue(QLContext context) {
 		return value;
 	}
+	
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		sb.append(value);
+		return sb.toString();
+	}
 
 }

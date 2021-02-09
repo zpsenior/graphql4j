@@ -120,6 +120,9 @@ public class TypeConfig {
 		if(members == null) {
 			members = new HashMap<>();
 		}
+		if(name== null || "".equals(name)) {
+			throw new TypeException("empty member name");
+		}
 		if(members.containsKey(name)) {
 			throw new TypeException("duplicate name:" + name);
 		}

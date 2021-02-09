@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zpsenior.graphql4j.TypeConversion;
+import com.zpsenior.graphql4j.Utils;
 import com.zpsenior.graphql4j.annotation.Join;
 import com.zpsenior.graphql4j.annotation.Variable;
 import com.zpsenior.graphql4j.exception.ExecuteException;
@@ -18,13 +19,16 @@ public class Member{
 	
 	private AccessibleObject access;
 	private Map<String, Integer> params;
-	private String joinMethod;
-	private String[] joinParams;
+	private Join join = null;
+	private Class<?> valueType;
+	private boolean scalarType = false;
+	private boolean listType = false;
 	
 	public Member(AccessibleObject access) {
 		this.access = access;
 		if(access instanceof Method) {
 			Method method = (Method)access;
+			valueType = method.getReturnType();
 			int i = 0;
 			params = new HashMap<>();
 			for(Parameter param : method.getParameters()) {
@@ -34,21 +38,25 @@ public class Member{
 			};
 		}else {
 			Field field = (Field)access;
-			Join join = field.getAnnotation(Join.class);
-			if(join != null){
-				joinMethod = join.bind();
-				joinParams = join.params();
-			}
+			valueType = field.getType();
+			this.join = field.getAnnotation(Join.class);
 		}
+		scalarType = Utils.isScalarType(valueType);
+		listType = Utils.isListType(valueType);
 	}
 	
 	public Class<?> getValueType(){
-		if(access instanceof Method) {
-			return ((Method)access).getReturnType();
-		}
-		return ((Field)access).getType();
+		return valueType;
 	}
 	
+	public boolean isScalarType() {
+		return scalarType;
+	}
+	
+	public boolean isListType() {
+		return listType;
+	}
+
 	public AccessibleObject getAccess() {
 		return access;
 	}
@@ -61,7 +69,7 @@ public class Member{
 	}
 	
 	public Object invoke(Object inst, Map<String, Object> paramValues)throws Exception {
-		if(joinMethod != null) {
+		if(join != null) {
 			throw new ExecuteException("join field(" + ((Field)access).getName() + ") can not be invoked");
 		}
 		if(access instanceof Method) {
@@ -77,14 +85,6 @@ public class Member{
 			return method.invoke(inst, values);
 		}
 		return ((Field)access).get(inst);
-	}
-
-	public String getJoinMethod() {
-		return joinMethod;
-	}
-
-	public String[] getJoinParams() {
-		return joinParams;
 	}
 
 	public String getName() {
@@ -129,19 +129,24 @@ public class Member{
 			}
 		}else {
 			Field field = (Field)access;
-			sb.append(String.format("%-12s",field.getName())).append(" : ");
-			sb.append(getTypeName(field.getGenericType()));
-			if(joinMethod != null) {
-				sb.append("  @join(").append(joinMethod).append("(");
-				for(int i = 0; i < joinParams.length; i++) {
+			sb.append(String.format("%-12s", field.getName())).append(" : ");
+			sb.append(String.format("%-15s", getTypeName(field.getGenericType())));
+			if(join != null) {
+				sb.append("  @join(").append(join.bind()).append("(");
+				String[] params = join.params();
+				for(int i = 0; i < params.length; i++) {
 					if(i > 0) {
 						sb.append(", ");
 					}
-					sb.append(joinParams[i]);
+					sb.append(params[i]);
 				}
 				sb.append("))");
 			}
 		}
 		return sb.toString();
+	}
+
+	public Join getJoin() {
+		return join;
 	}
 }

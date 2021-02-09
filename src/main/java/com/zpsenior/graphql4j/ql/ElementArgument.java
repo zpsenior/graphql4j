@@ -25,4 +25,10 @@ public class ElementArgument implements Comparable<ElementArgument>{
 		return name.compareTo(target.name);
 	}
 	
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		sb.append(name).append(":");
+		sb.append(value);
+		return sb.toString();
+	}
 }

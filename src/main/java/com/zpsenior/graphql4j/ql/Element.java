@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.zpsenior.graphql4j.Utils;
+import com.zpsenior.graphql4j.annotation.Join;
 import com.zpsenior.graphql4j.exception.BindException;
 import com.zpsenior.graphql4j.schema.Member;
 import com.zpsenior.graphql4j.schema.Schema;
@@ -58,13 +58,12 @@ public class Element implements Comparable<Element>{
 	}
 
 	public Object execute(QLContext context, Object obj)throws Exception {
-		Class<?> valueType = member.getValueType();
 		Object value = null;
 		value = member.invoke(obj, buildMethodParams(context));
-		if(value == null || Utils.isScalarType(valueType)) {
+		if(value == null || member.isScalarType()) {
 			return value;
 		}
-		if(Utils.isListType(valueType)) {
+		if(member.isListType()) {
 			List<Object> list = new ArrayList<>();
 			for(Object o : (List<?>)value) {
 				Object item = buildChildrenValue(context, o);
@@ -72,14 +71,17 @@ public class Element implements Comparable<Element>{
 			}
 			return list;
 		}
-		return buildChildrenValue(context, value);
+		if(children.length > 0) {
+			return buildChildrenValue(context, value);
+		}
+		return value;
 	}
 	
 	private Object buildChildrenValue(QLContext context, Object inst) throws Exception {
 		Map<String, Object> childValues = new HashMap<>();
 		Map<String, Object> values = new HashMap<>();
 		for(Element child : children) {
-			if(child.member.getJoinMethod() == null) {
+			if(child.member.getJoin() == null) {
 				Object value = child.execute(context, inst);
 				values.put(child.getAlias(), value);
 				childValues.put(child.name, value);
@@ -87,9 +89,9 @@ public class Element implements Comparable<Element>{
 		}
 		for(Element child : children) {
 			Member member = child.member;
-			String joinMethod = member.getJoinMethod();
-			if(joinMethod != null) {
-				Object value = context.call(joinMethod, member.getJoinParams(), childValues);
+			Join join = member.getJoin();
+			if(join != null) {
+				Object value = context.call(join, childValues);
 				values.put(child.getAlias(), value);
 			}
 		}
@@ -123,11 +125,11 @@ public class Element implements Comparable<Element>{
 		}
 		this.member = member;
 		if(children != null && children.length > 0) {
-			Class<?> valueType = member.getValueType();
-			if(Utils.isScalarType(valueType)) {
+			if(member.isScalarType()) {
 				throw new BindException("scalar type can not be split!");
 			}
-			if(Utils.isListType(valueType)) {
+			Class<?> valueType = member.getValueType();
+			if(member.isListType()) {
 				valueType = valueType.getTypeParameters()[0].getClass();
 			}
 			TypeConfig typeConfig = schema.getTypeConfig(valueType);
@@ -142,4 +144,34 @@ public class Element implements Comparable<Element>{
 		return name.compareTo(target.name);
 	}
 
+	public void toString(int deep, StringBuffer sb) {
+		String prefix = String.format("%" + deep + "s", ""); 
+		sb.append(prefix);
+		if(!name.equals(alias)) {
+			sb.append(alias).append(":");
+		}
+		sb.append(name);
+		if(arguments.length > 0) {
+			sb.append("(");
+			boolean first = true;
+			for(ElementArgument arg : arguments){
+				if(first) {
+					first = false;
+				}else {
+					sb.append(", ");
+				}
+				sb.append(arg);
+			}
+			sb.append(")");
+		}
+		if(children != null && children.length > 0) {
+			sb.append("{").append("\n");
+			for(Element child : children) {
+				child.toString(deep + 3, sb);
+				sb.append("\n");
+			}
+			sb.append(prefix).append("}");
+		}
+	}
+	
 }

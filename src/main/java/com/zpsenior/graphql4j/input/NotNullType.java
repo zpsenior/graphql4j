@@ -12,4 +12,11 @@ public class NotNullType implements InputType {
 		return baseType;
 	}
 
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		sb.append(baseType);
+		sb.append("!");
+		return sb.toString();
+	}
+
 }

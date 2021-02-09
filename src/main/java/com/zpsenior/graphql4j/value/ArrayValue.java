@@ -23,5 +23,21 @@ public class ArrayValue extends Value {
 		}
 		return array;
 	}
+	
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		boolean first = true;
+		sb.append("[");
+		for(Value val : array) {
+			if(first) {
+				first = false;
+			}else {
+				sb.append(", ");
+			}
+			sb.append(val);
+		}
+		sb.append("]");
+		return sb.toString();
+	}
 
 }

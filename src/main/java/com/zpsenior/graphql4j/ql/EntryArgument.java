@@ -34,6 +34,14 @@ public class EntryArgument implements Comparable<EntryArgument>{
 	public int compareTo(EntryArgument target) {
 		return name.compareTo(target.name);
 	}
-
 	
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		sb.append("$").append(name).append(":");
+		sb.append(type);
+		if(defaultValue != null) {
+			sb.append(" = ").append(defaultValue);
+		}
+		return sb.toString();
+	}
 }

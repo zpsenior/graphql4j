@@ -23,5 +23,21 @@ public class ObjectValue extends Value {
 		}
 		return values;
 	}
-
+	
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		boolean first = true;
+		sb.append("{");
+		for(String key : map.keySet()) {
+			if(first) {
+				first = false;
+			}else {
+				sb.append(", ");
+			}
+			Value val = map.get(key);
+			sb.append(key).append(":").append(val);
+		}
+		sb.append("}");
+		return sb.toString();
+	}
 }

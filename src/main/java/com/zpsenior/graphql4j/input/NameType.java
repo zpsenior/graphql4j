@@ -18,5 +18,11 @@ public class NameType implements InputType {
 		return bindClass;
 	}
 
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		sb.append(name);
+		return sb.toString();
+	}
+
 	
 }

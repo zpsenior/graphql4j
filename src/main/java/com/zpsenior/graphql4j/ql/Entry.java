@@ -68,4 +68,30 @@ public class Entry implements Comparable<Entry>{
 	public int compareTo(Entry target) {
 		return name.compareTo(target.name);
 	}
+	
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		sb.append(kind == EntryKind.Query ? "query" : "mutation").append(" ");
+		sb.append(name);
+		if(arguments.length > 0) {
+			sb.append("(");
+			boolean first = true;
+			for(EntryArgument arg : arguments) {
+				if(first) {
+					first = false;
+				}else {
+					sb.append(", ");
+				}
+				sb.append(arg);
+			}
+			sb.append(")");
+		}
+		sb.append(" {\n");
+		for(Element ele : elements) {
+			ele.toString(3, sb);
+			sb.append("\n");
+		}
+		sb.append("}\n");
+		return sb.toString();
+	}
 }

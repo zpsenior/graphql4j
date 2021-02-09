@@ -43,4 +43,12 @@ public class QLRoot {
 			entry.bind(schema);
 		}
 	}
+	
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		for(Entry entry : entries.values()) {
+			sb.append(entry).append("\n");
+		}
+		return sb.toString();
+	}
 }
