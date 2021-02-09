@@ -15,7 +15,7 @@ public class ScalarType implements InputType {
 	public final static String TYPE_LONG = "Long";
 	public final static String TYPE_CHAR = "Char";
 	public final static String TYPE_DATE = "Date";
-	public final static String TYPE_BIGINT = "BigInt";
+	public final static String TYPE_BIGINT = "BigInteger";
 	public final static String TYPE_BIGDECIMAL = "BigDecimal";
 	
 	@SuppressWarnings("serial")
@@ -73,6 +73,20 @@ public class ScalarType implements InputType {
 	
 	public static ScalarType getType(Class<?> cls) {
 		return getType(cls.getSimpleName());
+	}
+
+	public Class<?> getBindClass()throws Exception {
+		String className;
+		if(TYPE_DATE.equals(name)) {
+			className = "java.util." + name;
+		}else if(TYPE_BIGDECIMAL.equals(name)){
+			className = "java.math." + name;
+		}else if(TYPE_BIGINT.equals(name)){
+			className = "java.math." + name;
+		}else {
+			className = "java.lang." + name;
+		}
+		return Class.forName(className);
 	}
 
 }

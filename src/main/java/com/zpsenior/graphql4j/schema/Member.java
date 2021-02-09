@@ -7,13 +7,15 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import com.zpsenior.graphql4j.TypeConversion;
-import com.zpsenior.graphql4j.Utils;
+import org.apache.commons.beanutils.BeanUtils;
+
 import com.zpsenior.graphql4j.annotation.Join;
 import com.zpsenior.graphql4j.annotation.Variable;
 import com.zpsenior.graphql4j.exception.ExecuteException;
+import com.zpsenior.graphql4j.utils.ScalarUtils;
 
 public class Member{
 	
@@ -41,8 +43,8 @@ public class Member{
 			valueType = field.getType();
 			this.join = field.getAnnotation(Join.class);
 		}
-		scalarType = Utils.isScalarType(valueType);
-		listType = Utils.isListType(valueType);
+		scalarType = ScalarUtils.isScalarType(valueType);
+		listType = valueType.isAssignableFrom(List.class);
 	}
 	
 	public Class<?> getValueType(){
@@ -75,16 +77,23 @@ public class Member{
 		if(access instanceof Method) {
 			Method method = (Method)access;
 			Parameter[] parameters = method.getParameters();
-			Object[] values = new Object[params.size()];
-			for(String name : params.keySet()) {
-				Object value = paramValues.get(name);
-				int idx = params.get(name);
-				Class<?> paramClass = parameters[idx].getType();
-				values[idx] = TypeConversion.conversion(paramClass, value);
-			}
+			Object[] values = mapParamValues(paramValues, parameters);
 			return method.invoke(inst, values);
 		}
 		return ((Field)access).get(inst);
+	}
+
+	private Object[] mapParamValues(Map<String, Object> paramValues, Parameter[] parameters) throws Exception {
+		Object[] values = new Object[params.size()];
+		for(String name : params.keySet()) {
+			Object value = paramValues.get(name);
+			int idx = params.get(name);
+			Class<?> paramClass = parameters[idx].getType();
+			Object paramObject = paramClass.newInstance();
+			BeanUtils.copyProperties(paramObject, value);
+			values[idx] = paramObject;
+		}
+		return values;
 	}
 
 	public String getName() {

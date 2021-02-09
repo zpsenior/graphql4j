@@ -7,9 +7,9 @@ import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.zpsenior.graphql4j.Utils;
 import com.zpsenior.graphql4j.annotation.Type;
 import com.zpsenior.graphql4j.exception.TypeException;
+import com.zpsenior.graphql4j.utils.ScalarUtils;
 
 public class Schema {
 	
@@ -91,7 +91,7 @@ public class Schema {
 			valueClass = valueClass.getComponentType();
 		}
 		logout("returnType ->" + valueClass.getName());
-		if(Utils.isScalarType(valueClass)) {
+		if(ScalarUtils.isScalarType(valueClass)) {
 			return;
 		}
 		buildTypeConfig(valueClass);

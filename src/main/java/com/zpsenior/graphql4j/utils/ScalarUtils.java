@@ -1,11 +1,10 @@
-package com.zpsenior.graphql4j;
+package com.zpsenior.graphql4j.utils;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
-import java.util.List;
 
-public class Utils {
+public class ScalarUtils {
 
 	
 	private final static Class<?>[] scalars = new Class[] {
@@ -36,9 +35,5 @@ public class Utils {
 			}
 		}
 		return false;
-	}
-	
-	public static boolean isListType(Class<?> type) {
-		return type.isAssignableFrom(List.class);
 	}
 }

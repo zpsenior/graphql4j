@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.zpsenior.graphql4j.JoinExecutor;
 import com.zpsenior.graphql4j.ParamFinder;
-import com.zpsenior.graphql4j.TypeConversion;
 import com.zpsenior.graphql4j.annotation.Join;
 import com.zpsenior.graphql4j.input.InputType;
 
@@ -26,7 +25,7 @@ public final class QLContext {
 		for(EntryArgument arg : arguments) {
 			String name = arg.getName();
 			InputType type = arg.getType();
-			Object value = TypeConversion.conversion(type, finder.getParam(name));
+			Object value = finder.getParam(name, type);
 			params.put(name, value);
 		}
 	}
