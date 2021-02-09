@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Join {
-	String[] value();
+	String[] map() default "";
 	String bind();
 	String[] params();
 }

@@ -40,7 +40,7 @@ public class QLBuilder {
 			//}else if(reader.checkKeyword("subscription")) {
 			//	entry = buildEntry(reader, EntryKind.SUBSCRIPTION);
 			}else {
-				throw new CompileException("unexpect token :" + reader.lookahead(0));
+				throw new CompileException("expect 'query', 'mutation', but token :" + reader.lookahead(0));
 			}
 			root.add(entry);
 			if(reader.eof()) {
@@ -90,7 +90,7 @@ public class QLBuilder {
 			defaultValue = buildDefaultValue(reader);
 		}
 		if(vars.contains(name)) {
-			throw new CompileException("duplication variable", name);
+			throw new CompileException("duplication variable:" + name);
 		}
 		vars.add(name);
 		return new EntryArgument(name, type, defaultValue);
@@ -204,7 +204,7 @@ public class QLBuilder {
 	private VariableValue buildVariableValue(QLReader reader) throws Exception{
 		String varName = reader.readName();
 		if(!vars.contains(varName)) {
-			throw new CompileException("not define variable", varName);
+			throw new CompileException("not define variable:"+ varName);
 		}
 		return new VariableValue(varName);
 	}

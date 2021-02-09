@@ -37,7 +37,9 @@ public class Token {
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		//sb.append(pos);
-		sb.append("->【").append(content).append("】");
+		sb.append("->");
+		//sb.append(type.name());
+		sb.append("【").append(content).append("】");
 		return sb.toString();
 	}
 }

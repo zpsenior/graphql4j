@@ -3,6 +3,7 @@ package com.zpsenior.graphql4j.schema;
 import java.util.List;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,7 +36,12 @@ public class Schema {
 		}
 	}
 	
-	
+	public void printSchema() {
+		for(String key : configs.keySet()) {
+			TypeConfig config = configs.get(key);
+			System.out.println(config);
+		}
+	}
 
 	public Object getQuery() {
 		return query;
@@ -46,6 +52,7 @@ public class Schema {
 	}
 
 	private TypeConfig buildTypeConfig(Class<?> cls)throws Exception {
+		logout("buildTypeConfig ->" + cls.getName());
 		String typeName = getTypeName(cls);
 		if(configs.containsKey(typeName)) {
 			return null;
@@ -53,26 +60,41 @@ public class Schema {
 		TypeConfig config = new TypeConfig(typeName, cls);
 		configs.put(typeName, config);
 		for(Member member : config.getMembers()){
-			Class<?> valueType;
-			if(member.isMethod()) {
-				Method method = (Method)member.getAccess();
-				valueType = method.getReturnType();
-			}else {
-				Field field = (Field)member.getAccess();
-				valueType = field.getType();
-			}
-			while(valueType.isArray()) {
-				valueType = valueType.getComponentType();
-			}
-			if(valueType == List.class) {
-				valueType = valueType.getTypeParameters()[0].getClass();
-			}
-			if(Utils.isScalarType(valueType)) {
-				continue;
-			}
-			buildTypeConfig(valueType);
+			buildReturnType(member);
 		}
 		return config;
+	}
+
+	private void buildReturnType(Member member) throws Exception {
+		java.lang.reflect.Type valueType;
+		if(member.isMethod()) {
+			Method method = (Method)member.getAccess();
+			valueType = method.getGenericReturnType();
+		}else {
+			Field field = (Field)member.getAccess();
+			valueType = field.getGenericType();
+		}
+		logout("buildReturnType ->" + valueType.getTypeName() + " " + member.getName());
+		Class<?> valueClass;
+		if(valueType instanceof ParameterizedType) {
+			ParameterizedType pt = (ParameterizedType)valueType;
+			Class<?> orgClass = (Class<?>)pt.getRawType();
+			if(orgClass != List.class) {
+				throw new TypeException("parameterized type must be List.class");
+			}
+			valueClass = (Class<?>)pt.getActualTypeArguments()[0];
+		}else {
+			valueClass = (Class<?>)valueType;
+		}
+		
+		while(valueClass.isArray()) {
+			valueClass = valueClass.getComponentType();
+		}
+		logout("returnType ->" + valueClass.getName());
+		if(Utils.isScalarType(valueClass)) {
+			return;
+		}
+		buildTypeConfig(valueClass);
 	}
 	
 	public TypeConfig getTypeConfig(String name) {
@@ -98,5 +120,9 @@ public class Schema {
 			typeName = cls.getSimpleName();
 		}
 		return typeName;
+	}
+	
+	private void logout(String msg) {
+		System.out.println(msg);
 	}
 }

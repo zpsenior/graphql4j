@@ -1,4 +1,4 @@
-package graphql4j.test;
+package com.zpsenior.graphql4j.test;
 
 import java.io.FileReader;
 

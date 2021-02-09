@@ -4,6 +4,8 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -84,6 +86,62 @@ public class Member{
 	public String[] getJoinParams() {
 		return joinParams;
 	}
+
+	public String getName() {
+		if(access instanceof Method) {
+			Method method = (Method)access;
+			return method.getName();
+		}else {
+			Field field = (Field)access;
+			return field.getName();
+		}
+	}
 	
 	
+	private String getTypeName(Type type) {
+		if(type instanceof ParameterizedType) {
+			ParameterizedType pt = (ParameterizedType)type;
+			Class<?> cls = (Class<?>)pt.getActualTypeArguments()[0];
+			return "[" + cls.getSimpleName() + "]";
+		}
+		return ((Class<?>)type).getSimpleName();
+	}
+	
+
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		if(access instanceof Method) {
+			Method method = (Method)access;
+			Parameter[] parameters = method.getParameters();
+			sb.append(method.getName()).append("(");
+			for(int i = 0; i < parameters.length; i++) {
+				Parameter parameter = parameters[i];
+				if(i > 0) {
+					sb.append(", ");
+				}
+				Variable var = parameter.getAnnotation(Variable.class);
+				sb.append(var.value()).append(":").append(getTypeName(parameter.getType()));
+			}
+			sb.append(")");
+			Class<?> returnType = method.getReturnType();
+			if(!"void".equals(returnType.getName())) {
+				sb.append(":").append(getTypeName(method.getGenericReturnType()));
+			}
+		}else {
+			Field field = (Field)access;
+			sb.append(String.format("%-12s",field.getName())).append(" : ");
+			sb.append(getTypeName(field.getGenericType()));
+			if(joinMethod != null) {
+				sb.append("  @join(").append(joinMethod).append("(");
+				for(int i = 0; i < joinParams.length; i++) {
+					if(i > 0) {
+						sb.append(", ");
+					}
+					sb.append(joinParams[i]);
+				}
+				sb.append("))");
+			}
+		}
+		return sb.toString();
+	}
 }

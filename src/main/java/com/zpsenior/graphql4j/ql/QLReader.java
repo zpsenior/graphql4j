@@ -80,7 +80,7 @@ public class QLReader {
 			logout("readPunctuator " + t);
 			return ;
 		}
-		throw new TokenException("expect " + symbol + " but token:" + t);
+		throw new TokenException("expect " + symbol + ", but token:" + t);
 	}
 
 	public String readName() throws Exception{
@@ -89,7 +89,7 @@ public class QLReader {
 			logout("readName " + t);
 			return t.getContent();
 		}
-		throw new TokenException("unexpect.token", t);
+		throw new TokenException("expect name type, but token:" + t);
 	}
 
 	public boolean lookName()throws Exception {

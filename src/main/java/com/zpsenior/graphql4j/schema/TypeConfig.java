@@ -43,12 +43,12 @@ public class TypeConfig {
 	}
 	
 	private void scanMethod(Class<?> cls) throws Exception{
-		for(Method method : cls.getMethods()){
+		for(Method method : cls.getDeclaredMethods()){
 			Field field = method.getAnnotation(Field.class);
 			if(field == null) {
 				continue;
 			}
-			String[] names = field.value();
+			logout("  scanMethod ->" + method.getName());
 			int mod = method.getModifiers();
 			if(!Modifier.isPublic(mod)) {
 				throw new TypeException("method(" + name + ") must be public");
@@ -59,6 +59,7 @@ public class TypeConfig {
 			if(method.getReturnType() == Void.class) {
 				throw new TypeException("method(" + name + ")`s returnType is void");
 			}
+			String[] names = field.value();
 			if(names == null || names.length <= 0) {
 				names = new String[] {method.getName()};
 			}
@@ -69,12 +70,12 @@ public class TypeConfig {
 	}
 	
 	private void scanField(Class<?> cls)throws Exception {
-		for(java.lang.reflect.Field field : cls.getFields()){
+		for(java.lang.reflect.Field field : cls.getDeclaredFields()){
 			Field fld = field.getAnnotation(Field.class);
 			if(fld == null) {
 				continue;
 			}
-			String[] names = fld.value();	
+			logout("  scanField ->" + field.getName());
 			int mod = field.getModifiers();
 			if(Modifier.isFinal(mod)) {
 				throw new TypeException("field(" + name + ") can not be final");
@@ -82,6 +83,7 @@ public class TypeConfig {
 			if(Modifier.isStatic(mod)) {
 				throw new TypeException("field(" + name + ") can not be static");
 			}
+			String[] names = fld.value();	
 			if(names == null || names.length <= 0) {
 				names = new String[] {field.getName()};
 			}
@@ -91,12 +93,12 @@ public class TypeConfig {
 		}
 	}
 	private void scanJoin(Class<?> cls)throws Exception {
-		for(java.lang.reflect.Field field : cls.getFields()) {
+		for(java.lang.reflect.Field field : cls.getDeclaredFields()) {
 			Join join = field.getAnnotation(Join.class);
 			if(join == null) {
 				continue;
 			}
-			String[] names = join.value();	
+			logout("  scanJoin ->" + field.getName());
 			int mod = field.getModifiers();
 			if(Modifier.isFinal(mod)) {
 				throw new TypeException("field(" + name + ") can not be final");
@@ -104,7 +106,7 @@ public class TypeConfig {
 			if(Modifier.isStatic(mod)) {
 				throw new TypeException("field(" + name + ") can not be static");
 			}
-
+			String[] names = join.map();
 			if(names == null || names.length <= 0) {
 				names = new String[] {field.getName()};
 			}
@@ -127,5 +129,24 @@ public class TypeConfig {
 
 	public Member getMemberByName(String name) {
 		return members.get(name);
+	}
+	
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		sb.append("#").append(typeClass.getName()).append("\n");
+		sb.append("type ").append(name).append(" {").append("\n");
+		if(members == null) {
+			System.out.println(name);
+		}
+		for(String key : members.keySet()) {
+			Member member = members.get(key);
+			sb.append("   ").append(member).append("\n");
+		}
+		sb.append("}\n");
+		return sb.toString();
+	}
+	
+	private void logout(String msg) {
+		System.out.println(msg);
 	}
 }
