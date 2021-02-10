@@ -20,4 +20,12 @@ public class ArrayType implements InputType {
 		sb.append("]");
 		return sb.toString();
 	}
+
+	@Override
+	public boolean compatible(Class<?> cls) {
+		if(cls.isArray()){
+			return baseType.compatible(cls.getComponentType());
+		}
+		return false;
+	}
 }

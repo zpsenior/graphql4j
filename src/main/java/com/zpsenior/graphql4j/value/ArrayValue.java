@@ -12,6 +12,10 @@ public class ArrayValue extends Value {
 		this.array = array.toArray(new Value[array.size()]);
 	}
 
+	public Value[] getValues() {
+		return array;
+	}
+
 	@Override
 	public Object getValue(QLContext context) {
 		Object[] values = new Object[array.length];

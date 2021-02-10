@@ -16,8 +16,12 @@ public class ElementArgument implements Comparable<ElementArgument>{
 		return name;
 	}
 
-	public Object getValue(QLContext context) {
+	public Object calculateValue(QLContext context) {
 		return value.getValue(context);
+	}
+	
+	public Value getValue() {
+		return value;
 	}
 
 	@Override

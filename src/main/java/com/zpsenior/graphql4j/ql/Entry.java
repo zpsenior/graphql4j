@@ -4,8 +4,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zpsenior.graphql4j.exception.BindException;
 import com.zpsenior.graphql4j.schema.Schema;
 import com.zpsenior.graphql4j.schema.TypeConfig;
+import com.zpsenior.graphql4j.value.VariableValue;
 
 public class Entry implements Comparable<Entry>{
 	private String name;
@@ -60,7 +62,7 @@ public class Entry implements Comparable<Entry>{
 		String name = kind == EntryKind.Query ? "Query" : "Mutation";
 		TypeConfig typeConfig = schema.getTypeConfig(name);
 		for(Element ele : elements) {
-			ele.bind(schema, typeConfig);
+			ele.bind(this, schema, typeConfig);
 		}
 	}
 
@@ -94,4 +96,16 @@ public class Entry implements Comparable<Entry>{
 		sb.append("}\n");
 		return sb.toString();
 	}
+
+	protected void checkVariable(VariableValue val, Class<?> type) throws Exception{
+		String name = val.getVarName();
+		for(EntryArgument arg : arguments) {
+			if(name.equals(arg.getName())) {
+				if(!arg.getType().compatible(type)) {
+					throw new BindException("type(" + arg.getType() + ") is not compatible" + type.getName());
+				}
+			}
+		}
+	}
+
 }

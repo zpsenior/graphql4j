@@ -24,5 +24,10 @@ public class NameType implements InputType {
 		return sb.toString();
 	}
 
+	@Override
+	public boolean compatible(Class<?> cls) {
+		return bindClass.isAssignableFrom(cls);
+	}
+
 	
 }

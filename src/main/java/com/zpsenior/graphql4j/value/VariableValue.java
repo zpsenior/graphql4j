@@ -10,6 +10,10 @@ public class VariableValue extends Value {
 		this.varName = varName;
 	}
 
+	public String getVarName() {
+		return varName;
+	}
+
 	@Override
 	public Object getValue(QLContext context) {
 		return context.getParamValue(varName);

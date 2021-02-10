@@ -24,6 +24,10 @@ public class ObjectValue extends Value {
 		return values;
 	}
 	
+	public Value[] getValues() {
+		return map.values().toArray(new Value[map.size()]);
+	}
+	
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		boolean first = true;

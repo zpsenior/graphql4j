@@ -19,4 +19,9 @@ public class NotNullType implements InputType {
 		return sb.toString();
 	}
 
+	@Override
+	public boolean compatible(Class<?> cls) {
+		return baseType.compatible(cls);
+	}
+
 }

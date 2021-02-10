@@ -64,7 +64,11 @@ public class SpringJoinExecutor implements JoinExecutor {
 		if(provider == null) {
 			throw new ExecuteException("can not find request:" + request);
 		}
-		return provider.invoke(paramValues);
+		Object result = provider.invoke(paramValues);
+		if(result != null && !resultType.isInstance(result)) {
+			throw new ExecuteException("result type(" + result.getClass().getName() + ") is not compatible:" + resultType.getName());
+		}
+		return result;
 	}
 
 }

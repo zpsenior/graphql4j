@@ -10,8 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.beanutils.BeanUtils;
-
 import com.zpsenior.graphql4j.annotation.Join;
 import com.zpsenior.graphql4j.annotation.Variable;
 import com.zpsenior.graphql4j.exception.ExecuteException;
@@ -19,8 +17,23 @@ import com.zpsenior.graphql4j.utils.ScalarUtils;
 
 public class Member{
 	
+	public class Param{
+		private int index;
+		private Class<?> type;
+		Param(int index, Class<?> type){
+			this.index = index;
+			this.type = type;
+		}
+		public int getIndex() {
+			return index;
+		}
+		public Class<?> getType() {
+			return type;
+		}
+	}
+	
 	private AccessibleObject access;
-	private Map<String, Integer> params;
+	private Map<String, Param> params;
 	private Join join = null;
 	private Class<?> valueType;
 	private boolean scalarType = false;
@@ -35,7 +48,7 @@ public class Member{
 			params = new HashMap<>();
 			for(Parameter param : method.getParameters()) {
 				Variable var = param.getAnnotation(Variable.class);
-				params.put(var.value(), i);
+				params.put(var.value(), new Param(i, param.getType()));
 				i++;
 			};
 		}else {
@@ -62,12 +75,13 @@ public class Member{
 	public AccessibleObject getAccess() {
 		return access;
 	}
-	public boolean containsParam(String name) {
-		return params.containsKey(name);
-	}
 	
 	public boolean isMethod() {
 		return (access instanceof Method);
+	}
+	
+	public Map<String, Param> getParams(){
+		return params;
 	}
 	
 	public Object invoke(Object inst, Map<String, Object> paramValues)throws Exception {
@@ -86,16 +100,12 @@ public class Member{
 	private Object[] mapParamValues(Map<String, Object> paramValues, Parameter[] parameters) throws Exception {
 		Object[] values = new Object[params.size()];
 		for(String name : params.keySet()) {
-			Object value = paramValues.get(name);
-			int idx = params.get(name);
+			Object paramObject = paramValues.get(name);
+			Param param = params.get(name);
+			int idx = param.getIndex();
 			Class<?> paramClass = parameters[idx].getType();
-			Object paramObject;
-			if(ScalarUtils.isScalarType(paramClass)) {
-				paramObject = ScalarUtils.toScalar(paramClass, value.toString());
-				continue;
-			}else{
-				paramObject = paramClass.newInstance();
-				BeanUtils.copyProperties(paramObject, value);
+			if(!paramClass.isInstance(paramObject)) {
+				
 			}
 			values[idx] = paramObject;
 		}

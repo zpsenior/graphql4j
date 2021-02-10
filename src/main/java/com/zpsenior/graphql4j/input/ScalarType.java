@@ -89,4 +89,13 @@ public class ScalarType implements InputType {
 		return Class.forName(className);
 	}
 
+	@Override
+	public boolean compatible(Class<?> cls) {
+		try {
+			return getBindClass() == cls;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
 }
