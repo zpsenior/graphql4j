@@ -35,6 +35,16 @@ public class Query {
 	}
 
 	@Field
+	public List<Order> queryOrderListByAdmin(@Variable("tenantId") String tenantId){
+		return null;
+	}
+
+	@Field
+	public List<Order> queryOrderListByUser(@Variable("tenantId") String tenantId){
+		return null;
+	}
+
+	@Field
 	public Admin getAdmin(@Variable("tenantId") String tenantId, @Variable("adminId") String adminId){
 		return null;
 	}

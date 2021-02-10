@@ -29,6 +29,8 @@ public class TestQL {
 			
 		};
 		builder.build(fr, finder, root);
+		
+		System.out.println(root);
 	}
 
 }

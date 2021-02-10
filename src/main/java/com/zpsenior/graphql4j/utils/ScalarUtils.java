@@ -2,6 +2,8 @@ package com.zpsenior.graphql4j.utils;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class ScalarUtils {
@@ -35,5 +37,31 @@ public class ScalarUtils {
 			}
 		}
 		return false;
+	}
+
+	public static Object toScalar(Class<?> bindClass, String str) {
+		if(bindClass == Byte.class) {
+			return Byte.parseByte(str);
+		}else if(bindClass == Character.class) {
+			return (byte)Integer.parseInt(str);
+		}else if(bindClass == Short.class) {
+			return Short.parseShort(str);
+		}else if(bindClass == Integer.class) {
+			return Integer.parseInt(str);
+		}else if(bindClass == Float.class) {
+			return Float.parseFloat(str);
+		}else if(bindClass == Double.class) {
+			return Double.parseDouble(str);
+		}else if(bindClass == Boolean.class) {
+			return Boolean.parseBoolean(str);
+		}else if(bindClass == Date.class) {
+			DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+			return df.format(str);
+		}else if(bindClass == BigInteger.class) {
+			return new BigInteger(str);
+		}else if(bindClass == BigDecimal.class) {
+			return new BigDecimal(str);
+		}//String.class
+		return str;
 	}
 }

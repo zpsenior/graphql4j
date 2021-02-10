@@ -89,8 +89,14 @@ public class Member{
 			Object value = paramValues.get(name);
 			int idx = params.get(name);
 			Class<?> paramClass = parameters[idx].getType();
-			Object paramObject = paramClass.newInstance();
-			BeanUtils.copyProperties(paramObject, value);
+			Object paramObject;
+			if(ScalarUtils.isScalarType(paramClass)) {
+				paramObject = ScalarUtils.toScalar(paramClass, value.toString());
+				continue;
+			}else{
+				paramObject = paramClass.newInstance();
+				BeanUtils.copyProperties(paramObject, value);
+			}
 			values[idx] = paramObject;
 		}
 		return values;
@@ -141,7 +147,8 @@ public class Member{
 			sb.append(String.format("%-12s", field.getName())).append(" : ");
 			sb.append(String.format("%-15s", getTypeName(field.getGenericType())));
 			if(join != null) {
-				sb.append("  @join(").append(join.bind()).append("(");
+				sb.append("  @join(");
+				sb.append(join.bind()).append("(");
 				String[] params = join.params();
 				for(int i = 0; i < params.length; i++) {
 					if(i > 0) {

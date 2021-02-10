@@ -19,7 +19,7 @@ public class Admin {
 	private String mobile;
 
 	@Field
-	private String status;
+	private UserStatus status;
 
 	@Field
 	private Date createDate;

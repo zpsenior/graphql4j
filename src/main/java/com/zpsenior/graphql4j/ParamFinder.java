@@ -11,10 +11,13 @@ public abstract class ParamFinder<T> {
 
 	public Object getParam(String name, InputType type)throws Exception {
 		if(type == null) {
-			throw new ConversionException("type is null");
+			throw new ConversionException("param(" + name + ")`s type is null");
 		}
 		Object obj = getObject(name);
 		if(obj == null) {
+			if(type instanceof NotNullType) {
+				throw new ConversionException("param(" + name + ") can not be null");
+			}
 			return null;
 		}
 		return convert(obj, type);
@@ -32,7 +35,7 @@ public abstract class ParamFinder<T> {
 			return convert2Array(obj, at);
 		}else if(type instanceof NameType) {
 			NameType nt = (NameType)type;
-			return convertObject(obj, nt.getBindClass());
+			return convert2Object(obj, nt.getBindClass());
 		}
 		throw new ConversionException("invalid type:" + type.getClass().getName());
 	}
@@ -43,6 +46,6 @@ public abstract class ParamFinder<T> {
 
 	protected abstract Object convert2Scalar(Object value, Class<?> cls) throws Exception;
 
-	protected abstract Object convertObject(Object value, Class<?> cls)throws Exception;
+	protected abstract Object convert2Object(Object value, Class<?> cls)throws Exception;
 
 }

@@ -15,11 +15,20 @@ public class User {
 	private String userId;
 
 	@Field
-	private String userName;
+	private String openId;
 
 	@Field
-	private Date createDate;
+	private String userName;
 	
 	@Field
 	private Gender gender;
+	
+	@Field
+	private String mobile;
+
+	@Field
+	private Date createDate;
+
+	@Field
+	private UserStatus status;
 }

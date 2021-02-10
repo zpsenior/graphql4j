@@ -91,7 +91,7 @@ public class Element implements Comparable<Element>{
 			Member member = child.member;
 			Join join = member.getJoin();
 			if(join != null) {
-				Object value = context.call(join, childValues);
+				Object value = context.call(join, childValues, member.getValueType());
 				values.put(child.getAlias(), value);
 			}
 		}

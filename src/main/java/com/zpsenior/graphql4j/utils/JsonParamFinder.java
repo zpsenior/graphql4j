@@ -1,11 +1,6 @@
 package com.zpsenior.graphql4j.utils;
 
 import java.beans.PropertyDescriptor;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
@@ -20,9 +15,7 @@ public class JsonParamFinder extends ParamFinder<JsonNode> {
 	
 	private JsonNode root;
 	
-	public JsonParamFinder() {}
-	
-	public void load(String json) throws Exception{
+	public JsonParamFinder(String json) throws Exception{
 		ObjectMapper mapper = new ObjectMapper();
 		root = mapper.readTree(json);
 	}
@@ -59,33 +52,11 @@ public class JsonParamFinder extends ParamFinder<JsonNode> {
 			throw new ConversionException("source type is not scalar type!");
 		}
 		String str = node.asText();
-		if(bindClass == Byte.class) {
-			return Byte.parseByte(str);
-		}else if(bindClass == Character.class) {
-			return (byte)Integer.parseInt(str);
-		}else if(bindClass == Short.class) {
-			return Short.parseShort(str);
-		}else if(bindClass == Integer.class) {
-			return Integer.parseInt(str);
-		}else if(bindClass == Float.class) {
-			return Float.parseFloat(str);
-		}else if(bindClass == Double.class) {
-			return Double.parseDouble(str);
-		}else if(bindClass == Boolean.class) {
-			return Boolean.parseBoolean(str);
-		}else if(bindClass == Date.class) {
-			DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-			return df.format(str);
-		}else if(bindClass == BigInteger.class) {
-			return new BigInteger(str);
-		}else if(bindClass == BigDecimal.class) {
-			return new BigDecimal(str);
-		}//String.class
-		return str;
+		return ScalarUtils.toScalar(bindClass, str);
 	}
 
 	@Override
-	protected Object convertObject(Object value, Class<?> bindClass) throws Exception {
+	protected Object convert2Object(Object value, Class<?> bindClass) throws Exception {
 		JsonNode node = (JsonNode)value;
 		Object target = bindClass.newInstance();
 		PropertyDescriptor[] props = PropertyUtils.getPropertyDescriptors(bindClass);
@@ -93,7 +64,16 @@ public class JsonParamFinder extends ParamFinder<JsonNode> {
 			String name = prop.getName();
 			JsonNode pv = node.get(name);
 			Class<?> cls = prop.getPropertyType();
-			PropertyUtils.setProperty(target, name, convertObject(pv, cls));
+			Object paramObject;
+			if(ScalarUtils.isScalarType(cls)) {
+				if(!pv.isValueNode()) {
+					throw new ConversionException("param(" + name + ") type is not scalar type!");
+				}
+				paramObject = ScalarUtils.toScalar(bindClass, pv.asText());
+			}else {
+				paramObject = convert2Object(pv, cls);
+			}
+			PropertyUtils.setProperty(target, name, paramObject);
 		}
 		return target;
 	}

@@ -2,6 +2,6 @@ package com.zpsenior.graphql4j;
 
 public interface JoinExecutor {
 	
-	Object call(String scope, String method, Object[] paramValues)throws Exception;
+	Object call(String method, Object[] paramValues, Class<?> resultType)throws Exception;
 	
 }

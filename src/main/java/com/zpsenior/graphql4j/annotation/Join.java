@@ -11,5 +11,4 @@ public @interface Join {
 	String[] map() default {};
 	String bind();
 	String[] params();
-	String scope() default "";
 }

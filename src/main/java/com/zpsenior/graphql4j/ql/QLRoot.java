@@ -23,14 +23,14 @@ public class QLRoot {
 		entries.put(name, entry);
 	}
 	
-	public Object query(String entryName, ParamFinder finder, JoinExecutor joiner) throws Exception{
+	public Object query(String entryName, ParamFinder<?> finder, JoinExecutor joiner) throws Exception{
 		Entry entry = entries.get(entryName);
 		QLContext context = new QLContext(finder, joiner);
 		return entry.execute(context, query);
 	}
 	
 
-	public Object mutation(String entryName, ParamFinder finder, JoinExecutor joiner) throws Exception{
+	public Object mutation(String entryName, ParamFinder<?> finder, JoinExecutor joiner) throws Exception{
 		Entry entry = entries.get(entryName);
 		QLContext context = new QLContext(finder, joiner);
 		return entry.execute(context, mutation);

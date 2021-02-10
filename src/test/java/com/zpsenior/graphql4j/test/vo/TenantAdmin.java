@@ -15,13 +15,16 @@ public class TenantAdmin {
 	private String adminId;
 
 	@Field
+	private String openId;
+
+	@Field
 	private String adminName;
 
 	@Field
 	private String mobile;
-	
+
 	@Field
-	private String status;
+	private UserStatus status;
 
 	@Field
 	private Date createDate;

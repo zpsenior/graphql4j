@@ -10,12 +10,12 @@ import com.zpsenior.graphql4j.input.InputType;
 
 public final class QLContext {
 	
-	private ParamFinder finder;
+	private ParamFinder<?> finder;
 	private JoinExecutor joiner;
 	
 	private Map<String, Object> params = new HashMap<>();
 	
-	public QLContext(ParamFinder finder, JoinExecutor joiner) {
+	public QLContext(ParamFinder<?> finder, JoinExecutor joiner) {
 		this.finder = finder;
 		this.joiner = joiner;
 	}
@@ -34,8 +34,7 @@ public final class QLContext {
 		return params.get(name);
 	}
 
-	public Object call(Join join, Map<String, Object> values) throws Exception{
-		String scope = join.scope();
+	public Object call(Join join, Map<String, Object> values, Class<?> resultType) throws Exception{
 		String method = join.bind();
 		String[] params = join.params();
 		Object[] paramValues = new Object[params.length];
@@ -45,6 +44,6 @@ public final class QLContext {
 			paramValues[i] = value;
 			i++;
 		}
-		return joiner.call(scope, method, paramValues);
+		return joiner.call(method, paramValues, resultType);
 	}
 }
