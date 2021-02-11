@@ -6,16 +6,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.zpsenior.graphql4j.annotation.Join;
 import com.zpsenior.graphql4j.exception.BindException;
 import com.zpsenior.graphql4j.schema.Member;
 import com.zpsenior.graphql4j.schema.Member.Param;
 import com.zpsenior.graphql4j.schema.Schema;
 import com.zpsenior.graphql4j.schema.TypeConfig;
-import com.zpsenior.graphql4j.value.ArrayValue;
-import com.zpsenior.graphql4j.value.ObjectValue;
 import com.zpsenior.graphql4j.value.Value;
-import com.zpsenior.graphql4j.value.VariableValue;
 
 public class Element implements Comparable<Element>{
 	
@@ -64,7 +60,7 @@ public class Element implements Comparable<Element>{
 
 	public Object execute(QLContext context, Object obj)throws Exception {
 		Object value = null;
-		value = member.invoke(obj, buildMethodParams(context));
+		value = member.invoke(context, obj, bindArguments(context));
 		if(value == null || member.isScalarType()) {
 			return value;
 		}
@@ -83,34 +79,21 @@ public class Element implements Comparable<Element>{
 	}
 	
 	private Object buildChildrenValue(QLContext context, Object inst) throws Exception {
-		Map<String, Object> childValues = new HashMap<>();
 		Map<String, Object> values = new HashMap<>();
 		for(Element child : children) {
-			if(child.member.getJoin() == null) {
-				Object value = child.execute(context, inst);
-				values.put(child.getAlias(), value);
-				childValues.put(child.name, value);
-			}
-		}
-		for(Element child : children) {
-			Member member = child.member;
-			Join join = member.getJoin();
-			if(join != null) {
-				Object value = context.call(join, childValues, member.getValueType());
-				values.put(child.getAlias(), value);
-			}
+			Object value = child.execute(context, inst);
+			values.put(child.getAlias(), value);
 		}
 		return values;
 	}
 
-	private Map<String, Object> buildMethodParams(QLContext context) {
+	private Map<String, Value> bindArguments(QLContext context) {
 		if(arguments == null) {
 			return null;
 		}
-		Map<String, Object> values = new HashMap<>();
+		Map<String, Value> values = new HashMap<>();
 		for(ElementArgument arg : arguments){
-			Object value = arg.calculateValue(context);
-			values.put(arg.getName(), value);
+			values.put(arg.getName(), arg.getValue());
 		}
 		return values;
 	}
@@ -121,7 +104,9 @@ public class Element implements Comparable<Element>{
 			throw new BindException("can not find :" + name + " in " + parent.getName());
 		}
 		if(member.isMethod()) {
-			checkParams(entry, member.getParams());
+			checkElementParameters(entry, member.getParams());
+		}else if(member.getJoin() != null){
+			
 		}
 		this.member = member;
 		if(children != null && children.length > 0) {
@@ -139,30 +124,18 @@ public class Element implements Comparable<Element>{
 		}
 	}
 
-	public void checkParams(Entry entry, Map<String, Param> params) throws Exception{
+	public void checkElementParameters(Entry entry, Map<String, Param> params) throws Exception{
 		for(ElementArgument arg : arguments) {
 			String argName = arg.getName();
 			Param param = params.get(argName);
 			if(param == null) {
-				throw new BindException("can not find argument(" + argName + ") in " + name);
+				throw new BindException("not find argument(" + argName + ") in element:" + name);
 			}
-			Value val = arg.getValue();
-			Class<?> paramType = param.getType();
-			if(val instanceof VariableValue) {
-				entry.checkVariable((VariableValue)val, paramType);
-			}else if(val instanceof ArrayValue) {
-				if(!paramType.isArray()) {
-					throw new BindException("argument(" + argName + ")`s type is not array");
-				}
-			}else if(val instanceof ObjectValue) {
-				if(paramType != Map.class) {
-					throw new BindException("argument(" + argName + ")`s type is not map");
-				}
-			}
+			arg.matchParameter(entry, param);
 		}
 		for(String paramName : params.keySet()) {
 			if(!includeParam(paramName)) {
-				throw new BindException("lack parameter(" + paramName + ") in " + name);
+				throw new BindException("lack parameter(" + paramName + ") in element:" + name);
 			}
 		}
 	}

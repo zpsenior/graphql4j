@@ -10,10 +10,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.beanutils.PropertyUtils;
+import org.springframework.beans.BeanUtils;
+
 import com.zpsenior.graphql4j.annotation.Join;
 import com.zpsenior.graphql4j.annotation.Variable;
-import com.zpsenior.graphql4j.exception.ExecuteException;
+import com.zpsenior.graphql4j.ql.QLContext;
 import com.zpsenior.graphql4j.utils.ScalarUtils;
+import com.zpsenior.graphql4j.value.Value;
 
 public class Member{
 	
@@ -84,28 +88,32 @@ public class Member{
 		return params;
 	}
 	
-	public Object invoke(Object inst, Map<String, Object> paramValues)throws Exception {
-		if(join != null) {
-			throw new ExecuteException("join field(" + ((Field)access).getName() + ") can not be invoked");
-		}
+	public Object invoke(QLContext context, Object inst, Map<String, Value> paramValues)throws Exception {
 		if(access instanceof Method) {
 			Method method = (Method)access;
-			Parameter[] parameters = method.getParameters();
-			Object[] values = mapParamValues(paramValues, parameters);
+			Object[] values = mapParamValues(context, paramValues);
 			return method.invoke(inst, values);
+		}else if(join != null) {
+			String[] names = join.params();
+			Object[] values = new Object[names.length];
+			for(int i = 0; i < names.length; i++) {
+				Object val = PropertyUtils.getProperty(inst, names[i]);
+				values[i] = val;
+			}
+			return context.call(join.bind(), values, valueType);
 		}
 		return ((Field)access).get(inst);
 	}
 
-	private Object[] mapParamValues(Map<String, Object> paramValues, Parameter[] parameters) throws Exception {
+	private Object[] mapParamValues(QLContext context, Map<String, Value> paramValues) throws Exception {
 		Object[] values = new Object[params.size()];
 		for(String name : params.keySet()) {
-			Object paramObject = paramValues.get(name);
+			Object paramObject = paramValues.get(name).getValue(context);
 			Param param = params.get(name);
 			int idx = param.getIndex();
-			Class<?> paramClass = parameters[idx].getType();
+			Class<?> paramClass = param.getType();
 			if(!paramClass.isInstance(paramObject)) {
-				
+				BeanUtils.copyProperties(paramClass.newInstance(), paramObject);
 			}
 			values[idx] = paramObject;
 		}

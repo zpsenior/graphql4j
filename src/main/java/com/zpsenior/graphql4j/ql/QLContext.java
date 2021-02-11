@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.zpsenior.graphql4j.JoinExecutor;
 import com.zpsenior.graphql4j.ParamFinder;
-import com.zpsenior.graphql4j.annotation.Join;
 import com.zpsenior.graphql4j.input.InputType;
 
 public final class QLContext {
@@ -34,16 +33,7 @@ public final class QLContext {
 		return params.get(name);
 	}
 
-	public Object call(Join join, Map<String, Object> values, Class<?> resultType) throws Exception{
-		String method = join.bind();
-		String[] params = join.params();
-		Object[] paramValues = new Object[params.length];
-		int i = 0;
-		for(String name : params) {
-			Object value = values.get(name);
-			paramValues[i] = value;
-			i++;
-		}
-		return joiner.call(method, paramValues, resultType);
+	public Object call(String method, Object[] values, Class<?> resultType) throws Exception{
+		return joiner.call(method, values, resultType);
 	}
 }

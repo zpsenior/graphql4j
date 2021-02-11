@@ -1,6 +1,13 @@
 package com.zpsenior.graphql4j.ql;
 
+import java.util.Map;
+
+import com.zpsenior.graphql4j.exception.BindException;
+import com.zpsenior.graphql4j.schema.Member.Param;
+import com.zpsenior.graphql4j.value.ArrayValue;
+import com.zpsenior.graphql4j.value.ObjectValue;
 import com.zpsenior.graphql4j.value.Value;
+import com.zpsenior.graphql4j.value.VariableValue;
 
 public class ElementArgument implements Comparable<ElementArgument>{
 	
@@ -15,13 +22,24 @@ public class ElementArgument implements Comparable<ElementArgument>{
 	public String getName() {
 		return name;
 	}
-
-	public Object calculateValue(QLContext context) {
-		return value.getValue(context);
-	}
 	
 	public Value getValue() {
 		return value;
+	}
+	
+	public void matchParameter(Entry entry, Param param)throws Exception {
+		Class<?> paramType = param.getType();
+		if(value instanceof VariableValue) {
+			entry.checkVariable((VariableValue)value, paramType);
+		}else if(value instanceof ArrayValue) {
+			if(!paramType.isArray()) {
+				throw new BindException("argument(" + name + ")`s type is not array");
+			}
+		}else if(value instanceof ObjectValue) {
+			if(paramType != Map.class) {
+				throw new BindException("argument(" + name + ")`s type is not map");
+			}
+		}
 	}
 
 	@Override

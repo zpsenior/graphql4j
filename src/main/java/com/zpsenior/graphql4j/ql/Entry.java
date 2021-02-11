@@ -103,9 +103,12 @@ public class Entry implements Comparable<Entry>{
 			if(name.equals(arg.getName())) {
 				if(!arg.getType().compatible(type)) {
 					throw new BindException("type(" + arg.getType() + ") is not compatible" + type.getName());
+				}else {
+					return;
 				}
 			}
 		}
+		throw new BindException("can not find variable : " + name + " in entry :" + this.name);
 	}
 
 }
