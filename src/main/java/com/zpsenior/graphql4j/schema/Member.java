@@ -6,59 +6,50 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import org.springframework.beans.BeanUtils;
 
 import com.zpsenior.graphql4j.annotation.Join;
 import com.zpsenior.graphql4j.annotation.Variable;
+import com.zpsenior.graphql4j.exception.BindException;
+import com.zpsenior.graphql4j.exception.TypeException;
+import com.zpsenior.graphql4j.ql.ElementArgument;
 import com.zpsenior.graphql4j.ql.QLContext;
 import com.zpsenior.graphql4j.utils.ScalarUtils;
 import com.zpsenior.graphql4j.value.Value;
 
 public class Member{
 	
-	public class Param{
-		private int index;
-		private Class<?> type;
-		Param(int index, Class<?> type){
-			this.index = index;
-			this.type = type;
-		}
-		public int getIndex() {
-			return index;
-		}
-		public Class<?> getType() {
-			return type;
-		}
-	}
-	
 	private AccessibleObject access;
-	private Map<String, Param> params;
+	private Value[] paramValues;
 	private Join join = null;
 	private Class<?> valueType;
 	private boolean scalarType = false;
 	private boolean listType = false;
 	
-	public Member(AccessibleObject access) {
+	public Member(AccessibleObject access)throws Exception {
 		this.access = access;
+		this.join = access.getAnnotation(Join.class);
 		if(access instanceof Method) {
 			Method method = (Method)access;
 			valueType = method.getReturnType();
-			int i = 0;
-			params = new HashMap<>();
-			for(Parameter param : method.getParameters()) {
+			paramValues = new Value[method.getParameterCount()];
+			Parameter[] parameters = method.getParameters();
+			for(int i = 0; i < paramValues.length; i++) {
+				Parameter param  = parameters[i];
 				Variable var = param.getAnnotation(Variable.class);
-				params.put(var.value(), new Param(i, param.getType()));
-				i++;
+				if(var == null) {
+					throw new TypeException("lack variable annotation at parameter(" + i + ") in method:" + method.getName());
+				}
 			};
+			if(join != null && join.params().length > 0) {
+				throw new TypeException("join at method(" + method.getName() + ") can not set params property");
+			}
 		}else {
 			Field field = (Field)access;
 			valueType = field.getType();
-			this.join = field.getAnnotation(Join.class);
 		}
 		scalarType = ScalarUtils.isScalarType(valueType);
 		listType = valueType.isAssignableFrom(List.class);
@@ -84,16 +75,44 @@ public class Member{
 		return (access instanceof Method);
 	}
 	
-	public Map<String, Param> getParams(){
-		return params;
+	public void bindArgumentValues(ElementArgument[] arguments)throws Exception{
+		if(!(access instanceof Method)) {
+			return;
+		}
+		Method method = (Method)access;
+		Parameter[] parameters = method.getParameters();
+		for(ElementArgument arg : arguments) {
+			if(!matchVarName(parameters, arg)) {
+				throw new BindException("can not find argument(" + arg.getName() + ") in method:" + method.getName());
+			}
+		}
 	}
 	
-	public Object invoke(QLContext context, Object inst, Map<String, Value> paramValues)throws Exception {
+	private boolean matchVarName(Parameter[] parameters, ElementArgument arg) throws Exception{
+		String argName = arg.getName();
+		for(int i = 0; i < parameters.length; i++) {
+			Parameter param = parameters[i];
+			Variable var = param.getAnnotation(Variable.class);
+			if(argName.equals(var.value())) {
+				Value val = arg.getValue();
+				paramValues[i] = val;
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public Object invoke(QLContext context, Object inst)throws Exception {
 		if(access instanceof Method) {
 			Method method = (Method)access;
-			Object[] values = mapParamValues(context, paramValues);
-			return method.invoke(inst, values);
-		}else if(join != null) {
+			Object[] values = getParamValues(context, method.getParameters());
+			if(join != null) {
+				return context.call(join.bind(), values, valueType);
+			}else {
+				return method.invoke(inst, values);
+			}
+		}//is field
+		if(join != null) {
 			String[] names = join.params();
 			Object[] values = new Object[names.length];
 			for(int i = 0; i < names.length; i++) {
@@ -105,17 +124,16 @@ public class Member{
 		return ((Field)access).get(inst);
 	}
 
-	private Object[] mapParamValues(QLContext context, Map<String, Value> paramValues) throws Exception {
-		Object[] values = new Object[params.size()];
-		for(String name : params.keySet()) {
-			Object paramObject = paramValues.get(name).getValue(context);
-			Param param = params.get(name);
-			int idx = param.getIndex();
-			Class<?> paramClass = param.getType();
+	private Object[] getParamValues(QLContext context, Parameter[] parameters) throws Exception {
+		Object[] values = new Object[paramValues.length];
+		for(int i = 0; i < values.length; i++) {
+			Value paramValue = paramValues[i];
+			Object paramObject = paramValue.getValue(context);
+			Class<?> paramClass = parameters[i].getType();
 			if(!paramClass.isInstance(paramObject)) {
 				BeanUtils.copyProperties(paramClass.newInstance(), paramObject);
 			}
-			values[idx] = paramObject;
+			values[i] = paramObject;
 		}
 		return values;
 	}
@@ -164,18 +182,18 @@ public class Member{
 			Field field = (Field)access;
 			sb.append(String.format("%-12s", field.getName())).append(" : ");
 			sb.append(String.format("%-15s", getTypeName(field.getGenericType())));
-			if(join != null) {
-				sb.append("  @join(");
-				sb.append(join.bind()).append("(");
-				String[] params = join.params();
-				for(int i = 0; i < params.length; i++) {
-					if(i > 0) {
-						sb.append(", ");
-					}
-					sb.append(params[i]);
+		}
+		if(join != null) {
+			sb.append("  @join(");
+			sb.append(join.bind()).append("(");
+			String[] params = join.params();
+			for(int i = 0; i < params.length; i++) {
+				if(i > 0) {
+					sb.append(", ");
 				}
-				sb.append("))");
+				sb.append(params[i]);
 			}
+			sb.append("))");
 		}
 		return sb.toString();
 	}

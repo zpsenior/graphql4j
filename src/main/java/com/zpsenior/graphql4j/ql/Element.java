@@ -8,10 +8,8 @@ import java.util.Map;
 
 import com.zpsenior.graphql4j.exception.BindException;
 import com.zpsenior.graphql4j.schema.Member;
-import com.zpsenior.graphql4j.schema.Member.Param;
 import com.zpsenior.graphql4j.schema.Schema;
 import com.zpsenior.graphql4j.schema.TypeConfig;
-import com.zpsenior.graphql4j.value.Value;
 
 public class Element implements Comparable<Element>{
 	
@@ -60,7 +58,7 @@ public class Element implements Comparable<Element>{
 
 	public Object execute(QLContext context, Object obj)throws Exception {
 		Object value = null;
-		value = member.invoke(context, obj, bindArguments(context));
+		value = member.invoke(context, obj);
 		if(value == null || member.isScalarType()) {
 			return value;
 		}
@@ -87,24 +85,13 @@ public class Element implements Comparable<Element>{
 		return values;
 	}
 
-	private Map<String, Value> bindArguments(QLContext context) {
-		if(arguments == null) {
-			return null;
-		}
-		Map<String, Value> values = new HashMap<>();
-		for(ElementArgument arg : arguments){
-			values.put(arg.getName(), arg.getValue());
-		}
-		return values;
-	}
-
-	public void bind(Entry entry, Schema schema, TypeConfig parent)throws Exception {
+	public void bind(Schema schema, TypeConfig parent)throws Exception {
 		Member member = parent.getMemberByName(name);
 		if(member == null) {
 			throw new BindException("can not find :" + name + " in " + parent.getName());
 		}
 		if(member.isMethod()) {
-			checkElementParameters(entry, member.getParams());
+			member.bindArgumentValues(arguments);
 		}else if(member.getJoin() != null){
 			
 		}
@@ -119,34 +106,9 @@ public class Element implements Comparable<Element>{
 			}
 			TypeConfig typeConfig = schema.getTypeConfig(valueType);
 			for(Element child : children) {
-				child.bind(entry, schema, typeConfig);
+				child.bind(schema, typeConfig);
 			}
 		}
-	}
-
-	public void checkElementParameters(Entry entry, Map<String, Param> params) throws Exception{
-		for(ElementArgument arg : arguments) {
-			String argName = arg.getName();
-			Param param = params.get(argName);
-			if(param == null) {
-				throw new BindException("not find argument(" + argName + ") in element:" + name);
-			}
-			arg.matchParameter(entry, param);
-		}
-		for(String paramName : params.keySet()) {
-			if(!includeParam(paramName)) {
-				throw new BindException("lack parameter(" + paramName + ") in element:" + name);
-			}
-		}
-	}
-	
-	private boolean includeParam(String name) {
-		for(ElementArgument arg : arguments) {
-			if(arg.getName().equals(name)) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	@Override

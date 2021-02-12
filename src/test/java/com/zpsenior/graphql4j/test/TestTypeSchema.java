@@ -58,7 +58,7 @@ public class TestTypeSchema {
 		
 		
 		try {
-			Schema schema = new Schema(new Query(), new Mutation());
+			Schema schema = new Schema(Query.class, Mutation.class);
 			schema.printSchema();
 		} catch (Exception e) {
 			e.printStackTrace();

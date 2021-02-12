@@ -13,16 +13,11 @@ import com.zpsenior.graphql4j.utils.ScalarUtils;
 
 public class Schema {
 	
-	private Object query;
-	private Object mutation;
-	
 	private Map<String, TypeConfig> configs = new HashMap<>();
 	
-	public Schema(Object query, Object mutation)throws Exception {
-		this.query = query;
-		this.mutation = mutation;
+	public Schema(Class<?> query, Class<?> mutation)throws Exception {
 		
-		init(query.getClass(), mutation.getClass());
+		init(query, mutation);
 	}
 
 	private void init(Class<?> clsQuery, Class<?> clsMutation)throws Exception {
@@ -41,14 +36,6 @@ public class Schema {
 			TypeConfig config = configs.get(key);
 			System.out.println(config);
 		}
-	}
-
-	public Object getQuery() {
-		return query;
-	}
-
-	public Object getMutation() {
-		return mutation;
 	}
 
 	private TypeConfig buildTypeConfig(Class<?> cls)throws Exception {

@@ -62,7 +62,7 @@ public class Entry implements Comparable<Entry>{
 		String name = kind == EntryKind.Query ? "Query" : "Mutation";
 		TypeConfig typeConfig = schema.getTypeConfig(name);
 		for(Element ele : elements) {
-			ele.bind(this, schema, typeConfig);
+			ele.bind(schema, typeConfig);
 		}
 	}
 

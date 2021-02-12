@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import com.zpsenior.graphql4j.ql.QLBuilder;
+import com.zpsenior.graphql4j.ql.QLContext;
 import com.zpsenior.graphql4j.ql.QLRoot;
 import com.zpsenior.graphql4j.schema.Schema;
 import com.zpsenior.graphql4j.test.input.QueryGoodsParam;
@@ -41,7 +42,7 @@ public class TestExecute {
 
 		Schema schema;
 		
-		schema = new Schema(new Query(), new Mutation());
+		schema = new Schema(Query.class, Mutation.class);
 		schema.printSchema();
 		
 		QLRoot root = new QLRoot();
@@ -51,6 +52,8 @@ public class TestExecute {
 		builder.build(fr, finder, root);
 		
 		root.bind(schema);
+		
+		//QLContext context = new QLContext(finder, joiner);
 		
 		//root.mutation(entryName, finder, joiner);
 		//root.query(entryName, finder, joiner);
