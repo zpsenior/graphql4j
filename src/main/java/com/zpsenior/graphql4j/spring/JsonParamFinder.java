@@ -1,4 +1,4 @@
-package com.zpsenior.graphql4j.utils;
+package com.zpsenior.graphql4j.spring;
 
 import java.beans.PropertyDescriptor;
 
@@ -10,14 +10,18 @@ import com.zpsenior.graphql4j.ParamFinder;
 import com.zpsenior.graphql4j.exception.ConversionException;
 import com.zpsenior.graphql4j.input.ArrayType;
 import com.zpsenior.graphql4j.input.InputType;
+import com.zpsenior.graphql4j.utils.ScalarUtils;
 
 public class JsonParamFinder extends ParamFinder<JsonNode> {
 	
 	private JsonNode root;
 	
 	public JsonParamFinder(String json) throws Exception{
-		ObjectMapper mapper = new ObjectMapper();
-		root = mapper.readTree(json);
+		this((new ObjectMapper()).readTree(json));
+	}
+	
+	public JsonParamFinder(JsonNode root) {
+		this.root = root;
 	}
 
 	@Override

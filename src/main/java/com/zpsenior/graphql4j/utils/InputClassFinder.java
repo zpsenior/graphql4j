@@ -15,13 +15,13 @@ import com.zpsenior.graphql4j.annotation.Input;
 import com.zpsenior.graphql4j.exception.ExecuteException;
 import com.zpsenior.graphql4j.input.InputFinder;
 
-public class ClassFinder implements InputFinder {
+public class InputClassFinder implements InputFinder {
 
 	private Map<String, Class<?>> classes = new HashMap<>();
 	
 	private ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
-	public ClassFinder(String packageName) throws Exception {
+	public InputClassFinder(String packageName) throws Exception {
 		String packageDirName = packageName.replace('.', '/');
 		Enumeration<URL> dirs = cl.getResources(packageDirName);
 		while (dirs.hasMoreElements()) {

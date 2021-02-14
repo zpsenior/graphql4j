@@ -1,8 +1,6 @@
 package com.zpsenior.graphql4j.schema;
 
 import java.util.List;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,11 +29,13 @@ public class Schema {
 		}
 	}
 	
-	public void printSchema() {
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
 		for(String key : configs.keySet()) {
 			TypeConfig config = configs.get(key);
-			System.out.println(config);
+			sb.append(config).append("\n");
 		}
+		return sb.toString();
 	}
 
 	private TypeConfig buildTypeConfig(Class<?> cls)throws Exception {
@@ -53,14 +53,7 @@ public class Schema {
 	}
 
 	private void buildReturnType(Member member) throws Exception {
-		java.lang.reflect.Type valueType;
-		if(member.isMethod()) {
-			Method method = (Method)member.getAccess();
-			valueType = method.getGenericReturnType();
-		}else {
-			Field field = (Field)member.getAccess();
-			valueType = field.getGenericType();
-		}
+		java.lang.reflect.Type valueType = member.getValueGenericType();
 		logout("buildReturnType ->" + valueType.getTypeName() + " " + member.getName());
 		Class<?> valueClass;
 		if(valueType instanceof ParameterizedType) {

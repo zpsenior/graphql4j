@@ -35,6 +35,10 @@ public class QLRoot {
 		}
 	}
 	
+	public Entry getEntry(String name) {
+		return entries.get(name);
+	}
+	
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		for(Entry entry : entries.values()) {

@@ -14,6 +14,7 @@ import org.springframework.beans.BeanUtils;
 import com.zpsenior.graphql4j.annotation.Join;
 import com.zpsenior.graphql4j.annotation.Variable;
 import com.zpsenior.graphql4j.exception.BindException;
+import com.zpsenior.graphql4j.exception.ExecuteException;
 import com.zpsenior.graphql4j.exception.TypeException;
 import com.zpsenior.graphql4j.ql.ElementArgument;
 import com.zpsenior.graphql4j.ql.QLContext;
@@ -22,37 +23,54 @@ import com.zpsenior.graphql4j.value.Value;
 
 public class Member{
 	
-	private AccessibleObject access;
+	private String name;
+	private boolean isMethod;
+	private String[] paramNames;
+	private Class<?>[] paramClasses;
 	private Value[] paramValues;
 	private Join join = null;
 	private Class<?> valueType;
+	private Type valueGenericType;
 	private boolean scalarType = false;
 	private boolean listType = false;
 	
 	public Member(AccessibleObject access)throws Exception {
-		this.access = access;
+		this.isMethod = (access instanceof Method);
 		this.join = access.getAnnotation(Join.class);
-		if(access instanceof Method) {
+		if(isMethod) {
 			Method method = (Method)access;
+			name = method.getName();
 			valueType = method.getReturnType();
-			paramValues = new Value[method.getParameterCount()];
+			valueGenericType = method.getGenericReturnType();
+			int paramCount = method.getParameterCount();
+			paramNames  = new String[paramCount];
+			paramClasses = new Class<?>[paramCount];
+			paramValues  = new Value[paramCount];
 			Parameter[] parameters = method.getParameters();
-			for(int i = 0; i < paramValues.length; i++) {
+			for(int i = 0; i < paramCount; i++) {
 				Parameter param  = parameters[i];
 				Variable var = param.getAnnotation(Variable.class);
 				if(var == null) {
 					throw new TypeException("lack variable annotation at parameter(" + i + ") in method:" + method.getName());
 				}
+				paramNames[i] = var.value();
+				paramClasses[i] = param.getType();
 			};
 			if(join != null && join.params().length > 0) {
 				throw new TypeException("join at method(" + method.getName() + ") can not set params property");
 			}
 		}else {
 			Field field = (Field)access;
+			name = field.getName();
 			valueType = field.getType();
+			valueGenericType = field.getGenericType();
 		}
 		scalarType = ScalarUtils.isScalarType(valueType);
 		listType = valueType.isAssignableFrom(List.class);
+	}
+	
+	public Type getValueGenericType(){
+		return valueGenericType;
 	}
 	
 	public Class<?> getValueType(){
@@ -66,34 +84,27 @@ public class Member{
 	public boolean isListType() {
 		return listType;
 	}
-
-	public AccessibleObject getAccess() {
-		return access;
-	}
 	
 	public boolean isMethod() {
-		return (access instanceof Method);
+		return isMethod;
 	}
 	
 	public void bindArgumentValues(ElementArgument[] arguments)throws Exception{
-		if(!(access instanceof Method)) {
+		if(!isMethod) {
 			return;
 		}
-		Method method = (Method)access;
-		Parameter[] parameters = method.getParameters();
 		for(ElementArgument arg : arguments) {
-			if(!matchVarName(parameters, arg)) {
-				throw new BindException("can not find argument(" + arg.getName() + ") in method:" + method.getName());
+			if(!matchVarName(arg)) {
+				throw new BindException("can not find argument(" + arg.getName() + ") in method:" + name);
 			}
 		}
 	}
 	
-	private boolean matchVarName(Parameter[] parameters, ElementArgument arg) throws Exception{
+	private boolean matchVarName(ElementArgument arg) throws Exception{
 		String argName = arg.getName();
-		for(int i = 0; i < parameters.length; i++) {
-			Parameter param = parameters[i];
-			Variable var = param.getAnnotation(Variable.class);
-			if(argName.equals(var.value())) {
+		for(int i = 0; i < paramNames.length; i++) {
+			String paramName = paramNames[i];
+			if(argName.equals(paramName)) {
 				Value val = arg.getValue();
 				paramValues[i] = val;
 				return true;
@@ -103,14 +114,16 @@ public class Member{
 	}
 	
 	public Object invoke(QLContext context, Object inst)throws Exception {
-		if(access instanceof Method) {
-			Method method = (Method)access;
-			Object[] values = getParamValues(context, method.getParameters());
+		if(isMethod) {
+			Object[] values = getParamValues(context);
 			if(join != null) {
 				return context.call(join.bind(), values, valueType);
-			}else {
-				return method.invoke(inst, values);
 			}
+			if(inst == null) {
+				throw new ExecuteException("the instance invoking method(" + name + ") is null");
+			}
+			Method method = inst.getClass().getDeclaredMethod(name, paramClasses);
+			return method.invoke(inst, values);
 		}//is field
 		if(join != null) {
 			String[] names = join.params();
@@ -121,15 +134,22 @@ public class Member{
 			}
 			return context.call(join.bind(), values, valueType);
 		}
-		return ((Field)access).get(inst);
+		if(inst == null) {
+			throw new ExecuteException("the instance invoking field(" + name + ") is null");
+		}
+		Field field = inst.getClass().getDeclaredField(name);
+		return field.get(inst);
 	}
 
-	private Object[] getParamValues(QLContext context, Parameter[] parameters) throws Exception {
+	private Object[] getParamValues(QLContext context) throws Exception {
 		Object[] values = new Object[paramValues.length];
-		for(int i = 0; i < values.length; i++) {
+		for(int i = 0; i < paramValues.length; i++) {
 			Value paramValue = paramValues[i];
+			if(paramValue == null) {
+				continue;
+			}
 			Object paramObject = paramValue.getValue(context);
-			Class<?> paramClass = parameters[i].getType();
+			Class<?> paramClass = paramClasses[i];
 			if(!paramClass.isInstance(paramObject)) {
 				BeanUtils.copyProperties(paramClass.newInstance(), paramObject);
 			}
@@ -139,13 +159,7 @@ public class Member{
 	}
 
 	public String getName() {
-		if(access instanceof Method) {
-			Method method = (Method)access;
-			return method.getName();
-		}else {
-			Field field = (Field)access;
-			return field.getName();
-		}
+		return name;
 	}
 	
 	
@@ -161,27 +175,20 @@ public class Member{
 
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
-		if(access instanceof Method) {
-			Method method = (Method)access;
-			Parameter[] parameters = method.getParameters();
-			sb.append(method.getName()).append("(");
-			for(int i = 0; i < parameters.length; i++) {
-				Parameter parameter = parameters[i];
+		if(isMethod) {
+			sb.append(name).append("(");
+			for(int i = 0; i < paramNames.length; i++) {
+				String paramName = paramNames[i];
 				if(i > 0) {
 					sb.append(", ");
 				}
-				Variable var = parameter.getAnnotation(Variable.class);
-				sb.append(var.value()).append(":").append(getTypeName(parameter.getType()));
+				sb.append(paramName).append(":").append(getTypeName(paramClasses[i]));
 			}
 			sb.append(")");
-			Class<?> returnType = method.getReturnType();
-			if(!"void".equals(returnType.getName())) {
-				sb.append(":").append(getTypeName(method.getGenericReturnType()));
-			}
+			sb.append(":").append(getTypeName(valueType));
 		}else {
-			Field field = (Field)access;
-			sb.append(String.format("%-12s", field.getName())).append(" : ");
-			sb.append(String.format("%-15s", getTypeName(field.getGenericType())));
+			sb.append(String.format("%-12s", name)).append(" : ");
+			sb.append(String.format("%-15s", getTypeName(valueType)));
 		}
 		if(join != null) {
 			sb.append("  @join(");

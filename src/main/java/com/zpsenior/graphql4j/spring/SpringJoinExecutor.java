@@ -1,4 +1,4 @@
-package com.zpsenior.graphql4j.utils;
+package com.zpsenior.graphql4j.spring;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;

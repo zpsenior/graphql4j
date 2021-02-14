@@ -1,4 +1,4 @@
-package com.zpsenior.graphql4j.utils;
+package com.zpsenior.graphql4j.spring;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;

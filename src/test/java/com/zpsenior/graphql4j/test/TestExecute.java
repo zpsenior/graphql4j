@@ -11,7 +11,7 @@ import com.zpsenior.graphql4j.schema.Schema;
 import com.zpsenior.graphql4j.test.input.QueryGoodsParam;
 import com.zpsenior.graphql4j.test.vo.Mutation;
 import com.zpsenior.graphql4j.test.vo.Query;
-import com.zpsenior.graphql4j.utils.ClassFinder;
+import com.zpsenior.graphql4j.utils.InputClassFinder;
 
 public class TestExecute {
 
@@ -43,11 +43,11 @@ public class TestExecute {
 		Schema schema;
 		
 		schema = new Schema(Query.class, Mutation.class);
-		schema.printSchema();
+		schema.toString();
 		
 		QLRoot root = new QLRoot();
 		QLBuilder builder = new QLBuilder();
-		ClassFinder finder = new ClassFinder(QueryGoodsParam.class.getPackage().getName());
+		InputClassFinder finder = new InputClassFinder(QueryGoodsParam.class.getPackage().getName());
 
 		builder.build(fr, finder, root);
 		
