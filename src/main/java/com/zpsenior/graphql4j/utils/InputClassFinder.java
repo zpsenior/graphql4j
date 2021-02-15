@@ -22,6 +22,9 @@ public class InputClassFinder implements InputFinder {
 	private ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
 	public InputClassFinder(String packageName) throws Exception {
+		if(packageName == null || "".equals(packageName)) {
+			return;
+		}
 		String packageDirName = packageName.replace('.', '/');
 		Enumeration<URL> dirs = cl.getResources(packageDirName);
 		while (dirs.hasMoreElements()) {

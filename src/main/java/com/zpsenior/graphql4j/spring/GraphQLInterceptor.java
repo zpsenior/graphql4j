@@ -4,8 +4,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 import org.springframework.web.servlet.support.RequestContextUtils;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zpsenior.graphql4j.ParamFinder;
+import com.zpsenior.graphql4j.exception.ExecuteException;
 import com.zpsenior.graphql4j.ql.Entry;
 import com.zpsenior.graphql4j.ql.EntryKind;
 import com.zpsenior.graphql4j.ql.QLBuilder;
@@ -19,7 +20,7 @@ import java.io.InputStreamReader;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class GraphQLInterceptor extends HandlerInterceptorAdapter {
+public abstract class GraphQLInterceptor extends HandlerInterceptorAdapter {
 	
 	private Schema schema;
 	
@@ -27,16 +28,28 @@ public class GraphQLInterceptor extends HandlerInterceptorAdapter {
 	
 	private SpringJoinExecutor joinExecutor;
 	
+	private Class<?> queryClass;
+	private Class<?> mutationClass;
+	
 	private Object query;
 	private Object mutation;
 	
-	public GraphQLInterceptor(Object query, Object mutation, String inputClassPackage, String qlFileName)throws Exception {
+	private boolean bind = false;
+	
+	private void bind(ApplicationContext ctx)throws Exception {
+		if(queryClass == null || mutationClass == null) {
+			throw new ExecuteException("can not call init method at first!");
+		}
+		joinExecutor = new SpringJoinExecutor(ctx);
+		this.query = ctx.getBean(queryClass);
+		this.mutation = ctx.getBean(mutationClass);
+		bind = true;
+	}
+	
+	public void init(String queryClassName, String mutationClassName, String inputClassPackage, String qlFileName)throws Exception {
 		
-		this.query = query;
-		this.mutation = mutation;
-		
-		Class<?> queryClass = query.getClass();
-		Class<?> mutationClass = mutation.getClass();
+		this.queryClass = Class.forName(queryClassName);
+		this.mutationClass = Class.forName(mutationClassName);
 		
 		InputClassFinder finder = new InputClassFinder(inputClassPackage);
 		schema = new Schema(queryClass, mutationClass);
@@ -49,16 +62,30 @@ public class GraphQLInterceptor extends HandlerInterceptorAdapter {
 		
 		root.bind(schema);
 	}
+	
+	protected abstract ParamFinder<?> buildParamFinder(HttpServletRequest request)throws Exception;
 
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
 			throws Exception {
 		
+		if(!bind) {
+			ApplicationContext ctx = RequestContextUtils.findWebApplicationContext(request);
+			bind(ctx);
+		}
+		
 		String entryName = getEntryName(request);
 		
-		JsonNode jroot = (new ObjectMapper()).readTree(request.getInputStream());
+		try{
+			validate(request, entryName);
+		}catch(Exception e) {
+			response.getWriter().println(new Result(Result.ERROR, e));
+			return true;
+		}
+		
+		ParamFinder<?> paramFinder;
 		
 		try{
-			validate(request, entryName, jroot);
+			paramFinder = buildParamFinder(request);
 		}catch(Exception e) {
 			response.getWriter().println(new Result(Result.ERROR, e));
 			return true;
@@ -74,12 +101,7 @@ public class GraphQLInterceptor extends HandlerInterceptorAdapter {
 			return true;
 		}
 		
-		if(joinExecutor == null) {
-			ApplicationContext ctx = RequestContextUtils.findWebApplicationContext(request);
-			joinExecutor = new SpringJoinExecutor(ctx);
-		}
-		
-		Result result = doHandle(entryName, jroot);
+		Result result = doHandle(entryName, paramFinder);
 		
 		String json = (new ObjectMapper()).writeValueAsString(result);
 		
@@ -87,17 +109,14 @@ public class GraphQLInterceptor extends HandlerInterceptorAdapter {
 		return true;
 	}
 
-	protected void validate(HttpServletRequest request, String entryName, JsonNode jroot) throws Exception{
-		// TODO Auto-generated method stub
-		
-	}
+	protected abstract void validate(HttpServletRequest request, String entryName) throws Exception;
 
-	private Result doHandle(String entryName, JsonNode jroot) {
+	private Result doHandle(String entryName, ParamFinder<?> finder) {
 		
 		Object resultValue;
 		
 		try {
-			QLContext context = new QLContext(new JsonParamFinder(jroot), joinExecutor);
+			QLContext context = new QLContext(finder, joinExecutor);
 			Entry entry = root.getEntry(entryName);
 			resultValue = entry.execute(context, entry.getKind() == EntryKind.Query ? query : mutation);
 			return new Result(resultValue);

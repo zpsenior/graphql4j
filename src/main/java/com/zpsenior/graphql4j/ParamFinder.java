@@ -13,26 +13,25 @@ public abstract class ParamFinder<T> {
 		if(type == null) {
 			throw new ConversionException("param(" + name + ")`s type is null");
 		}
-		Object obj = getObject(name);
+		return convert(getObject(name), name, type);
+	}
+	
+	protected Object convert(T obj, String name, InputType type)throws Exception {
 		if(obj == null) {
 			if(type instanceof NotNullType) {
 				throw new ConversionException("param(" + name + ") can not be null");
 			}
 			return null;
 		}
-		return convert(obj, type);
-	}
-	
-	protected Object convert(Object obj, InputType type)throws Exception {
 		if(type instanceof NotNullType) {
 			NotNullType nnt = (NotNullType)type;
-			return convert(obj, nnt);
+			return convert(obj, name, nnt);
 		}else if(type instanceof ScalarType) {
 			ScalarType st = (ScalarType)type;
 			return convert2Scalar(obj, st.getBindClass());
 		}else if(type instanceof ArrayType) {
 			ArrayType at = (ArrayType)type;
-			return convert2Array(obj, at);
+			return convert2Array(obj, name, at);
 		}else if(type instanceof NameType) {
 			NameType nt = (NameType)type;
 			return convert2Object(obj, nt.getBindClass());
@@ -42,10 +41,10 @@ public abstract class ParamFinder<T> {
 	
 	protected abstract T getObject(String name) throws Exception;
 
-	protected abstract Object convert2Array(Object value, ArrayType at) throws Exception;
+	protected abstract Object convert2Array(T value, String name, ArrayType at) throws Exception;
 
-	protected abstract Object convert2Scalar(Object value, Class<?> cls) throws Exception;
+	protected abstract Object convert2Scalar(T value, Class<?> cls) throws Exception;
 
-	protected abstract Object convert2Object(Object value, Class<?> cls)throws Exception;
+	protected abstract Object convert2Object(T value, Class<?> cls)throws Exception;
 
 }

@@ -90,9 +90,6 @@ public class Member{
 	}
 	
 	public void bindArgumentValues(ElementArgument[] arguments)throws Exception{
-		if(!isMethod) {
-			return;
-		}
 		for(ElementArgument arg : arguments) {
 			if(!matchVarName(arg)) {
 				throw new BindException("can not find argument(" + arg.getName() + ") in method:" + name);
@@ -185,10 +182,10 @@ public class Member{
 				sb.append(paramName).append(":").append(getTypeName(paramClasses[i]));
 			}
 			sb.append(")");
-			sb.append(":").append(getTypeName(valueType));
+			sb.append(":").append(getTypeName(valueGenericType));
 		}else {
 			sb.append(String.format("%-12s", name)).append(" : ");
-			sb.append(String.format("%-15s", getTypeName(valueType)));
+			sb.append(String.format("%-15s", getTypeName(valueGenericType)));
 		}
 		if(join != null) {
 			sb.append("  @join(");

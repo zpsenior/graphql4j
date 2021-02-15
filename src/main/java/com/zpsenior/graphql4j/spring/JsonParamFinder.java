@@ -1,6 +1,7 @@
 package com.zpsenior.graphql4j.spring;
 
 import java.beans.PropertyDescriptor;
+import java.io.InputStream;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
@@ -15,6 +16,10 @@ import com.zpsenior.graphql4j.utils.ScalarUtils;
 public class JsonParamFinder extends ParamFinder<JsonNode> {
 	
 	private JsonNode root;
+	
+	public JsonParamFinder(InputStream input) throws Exception{
+		this((new ObjectMapper()).readTree(input));
+	}
 	
 	public JsonParamFinder(String json) throws Exception{
 		this((new ObjectMapper()).readTree(json));
@@ -34,8 +39,7 @@ public class JsonParamFinder extends ParamFinder<JsonNode> {
 	}
 
 	@Override
-	protected Object convert2Array(Object value, ArrayType at) throws Exception {
-		JsonNode node = (JsonNode)value;
+	protected Object convert2Array(JsonNode node, String name, ArrayType at) throws Exception {
 		if(!node.isArray()) {
 			throw new ConversionException("source type is not array!");
 		}
@@ -44,14 +48,13 @@ public class JsonParamFinder extends ParamFinder<JsonNode> {
 		Object[] values = new Object[node.size()];
 		for(int i = 0 ; i < node.size(); i++) {
 			JsonNode item = node.get(i);
-			values[i] = convert(item, baseType);
+			values[i] = convert(item, name, baseType);
 		}
 		return values;
 	}
 
 	@Override
-	protected Object convert2Scalar(Object value, Class<?> bindClass) throws Exception {
-		JsonNode node = (JsonNode)value;
+	protected Object convert2Scalar(JsonNode node, Class<?> bindClass) throws Exception {
 		if(!node.isValueNode()) {
 			throw new ConversionException("source type is not scalar type!");
 		}
@@ -60,8 +63,7 @@ public class JsonParamFinder extends ParamFinder<JsonNode> {
 	}
 
 	@Override
-	protected Object convert2Object(Object value, Class<?> bindClass) throws Exception {
-		JsonNode node = (JsonNode)value;
+	protected Object convert2Object(JsonNode node, Class<?> bindClass) throws Exception {
 		Object target = bindClass.newInstance();
 		PropertyDescriptor[] props = PropertyUtils.getPropertyDescriptors(bindClass);
 		for(PropertyDescriptor prop : props) {
