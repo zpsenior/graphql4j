@@ -63,7 +63,19 @@ public abstract class GraphQLInterceptor extends HandlerInterceptorAdapter {
 		root.bind(schema);
 	}
 	
-	protected abstract ParamFinder<?> buildParamFinder(HttpServletRequest request)throws Exception;
+	protected ParamFinder<?> buildParamFinder(HttpServletRequest request)throws Exception{
+		ParamFinder<?> finder;
+		String requestType = request.getHeader("X-Requested-With");
+		if(requestType != null && requestType.equalsIgnoreCase("XMLHttpRequest")) {
+			finder = new JsonParamFinder(request.getInputStream());
+		}else{
+			finder = new StringParamFinder(request.getParameterMap());
+		}
+		validate(request, finder);
+		return finder;
+	}
+
+	protected abstract void validate(HttpServletRequest request, ParamFinder<?> finder)throws Exception;
 
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
 			throws Exception {

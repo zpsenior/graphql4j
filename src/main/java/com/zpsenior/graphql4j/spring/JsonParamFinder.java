@@ -2,6 +2,7 @@ package com.zpsenior.graphql4j.spring;
 
 import java.beans.PropertyDescriptor;
 import java.io.InputStream;
+import java.util.Iterator;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
@@ -15,8 +16,6 @@ import com.zpsenior.graphql4j.utils.ScalarUtils;
 
 public class JsonParamFinder extends ParamFinder<JsonNode> {
 	
-	private JsonNode root;
-	
 	public JsonParamFinder(InputStream input) throws Exception{
 		this((new ObjectMapper()).readTree(input));
 	}
@@ -26,16 +25,12 @@ public class JsonParamFinder extends ParamFinder<JsonNode> {
 	}
 	
 	public JsonParamFinder(JsonNode root) {
-		this.root = root;
-	}
-
-	@Override
-	protected JsonNode getObject(String name) throws Exception {
-		JsonNode node = root.get(name);
-		if(node == null) {
-			return null;
+		Iterator<String> iterator = root.fieldNames();
+		while(iterator.hasNext()) {
+			String name = iterator.next();
+			JsonNode node = root.get(name);
+			addParam(name, node);
 		}
-		return node;
 	}
 
 	@Override

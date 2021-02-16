@@ -1,5 +1,8 @@
 package com.zpsenior.graphql4j;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.zpsenior.graphql4j.exception.ConversionException;
 import com.zpsenior.graphql4j.input.ArrayType;
 import com.zpsenior.graphql4j.input.InputType;
@@ -8,12 +11,26 @@ import com.zpsenior.graphql4j.input.NotNullType;
 import com.zpsenior.graphql4j.input.ScalarType;
 
 public abstract class ParamFinder<T> {
+	
+	private Map<String, T> params = new HashMap<>();
+	
+	protected void addParam(String key, T value) {
+		params.put(key, value);
+	}
+	
+	public String[] getParamNames(){
+		return params.keySet().toArray(new String[params.size()]);
+	}
+	
+	public T getParamValue(String name){
+		return params.get(name);
+	}
 
 	public Object getParam(String name, InputType type)throws Exception {
 		if(type == null) {
 			throw new ConversionException("param(" + name + ")`s type is null");
 		}
-		return convert(getObject(name), name, type);
+		return convert(params.get(name), name, type);
 	}
 	
 	protected Object convert(T obj, String name, InputType type)throws Exception {
@@ -38,8 +55,6 @@ public abstract class ParamFinder<T> {
 		}
 		throw new ConversionException("invalid type:" + type.getClass().getName());
 	}
-	
-	protected abstract T getObject(String name) throws Exception;
 
 	protected abstract Object convert2Array(T value, String name, ArrayType at) throws Exception;
 

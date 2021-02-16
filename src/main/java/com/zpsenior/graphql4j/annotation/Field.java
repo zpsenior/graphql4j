@@ -9,4 +9,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Field {
 	String[] value() default {};
+	boolean isKey() default false;
+	String desc() default "";
 }

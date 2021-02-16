@@ -2,7 +2,7 @@ package com.zpsenior.graphql4j.schema;
 
 import java.util.List;
 import java.lang.reflect.ParameterizedType;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.zpsenior.graphql4j.annotation.Type;
@@ -11,7 +11,7 @@ import com.zpsenior.graphql4j.utils.ScalarUtils;
 
 public class Schema {
 	
-	private Map<String, TypeConfig> configs = new HashMap<>();
+	private Map<String, TypeConfig> configs = new LinkedHashMap<>();
 	
 	public Schema(Class<?> query, Class<?> mutation)throws Exception {
 		
@@ -76,6 +76,10 @@ public class Schema {
 			return;
 		}
 		buildTypeConfig(valueClass);
+	}
+	
+	public String[] getTypeNames() {
+		return configs.keySet().toArray(new String[configs.size()]);
 	}
 	
 	public TypeConfig getTypeConfig(String name) {

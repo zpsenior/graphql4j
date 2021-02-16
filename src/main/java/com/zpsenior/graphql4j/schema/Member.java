@@ -12,7 +12,7 @@ import org.apache.commons.beanutils.PropertyUtils;
 import org.springframework.beans.BeanUtils;
 
 import com.zpsenior.graphql4j.annotation.Join;
-import com.zpsenior.graphql4j.annotation.Variable;
+import com.zpsenior.graphql4j.annotation.Var;
 import com.zpsenior.graphql4j.exception.BindException;
 import com.zpsenior.graphql4j.exception.ExecuteException;
 import com.zpsenior.graphql4j.exception.TypeException;
@@ -29,6 +29,7 @@ public class Member{
 	private Class<?>[] paramClasses;
 	private Value[] paramValues;
 	private Join join = null;
+	private com.zpsenior.graphql4j.annotation.Field field = null;
 	private Class<?> valueType;
 	private Type valueGenericType;
 	private boolean scalarType = false;
@@ -36,6 +37,7 @@ public class Member{
 	
 	public Member(AccessibleObject access)throws Exception {
 		this.isMethod = (access instanceof Method);
+		this.field = access.getAnnotation(com.zpsenior.graphql4j.annotation.Field.class);
 		this.join = access.getAnnotation(Join.class);
 		if(isMethod) {
 			Method method = (Method)access;
@@ -49,7 +51,7 @@ public class Member{
 			Parameter[] parameters = method.getParameters();
 			for(int i = 0; i < paramCount; i++) {
 				Parameter param  = parameters[i];
-				Variable var = param.getAnnotation(Variable.class);
+				Var var = param.getAnnotation(Var.class);
 				if(var == null) {
 					throw new TypeException("lack variable annotation at parameter(" + i + ") in method:" + method.getName());
 				}
@@ -87,6 +89,10 @@ public class Member{
 	
 	public boolean isMethod() {
 		return isMethod;
+	}
+	
+	public com.zpsenior.graphql4j.annotation.Field getField() {
+		return field;
 	}
 	
 	public void bindArgumentValues(ElementArgument[] arguments)throws Exception{
@@ -129,7 +135,12 @@ public class Member{
 				Object val = PropertyUtils.getProperty(inst, names[i]);
 				values[i] = val;
 			}
-			return context.call(join.bind(), values, valueGenericType);
+			Object result = context.call(join.bind(), values, valueGenericType);
+			//PropertyUtils.setProperty(inst, name, result);
+			Field field = inst.getClass().getDeclaredField(name);
+			field.setAccessible(true);
+			field.set(inst, result);
+			return result;
 		}
 		if(inst == null) {
 			throw new ExecuteException("the instance invoking field(" + name + ") is null");
@@ -162,6 +173,11 @@ public class Member{
 	}
 	
 	
+	public String getValueTypeName() {
+		return getTypeName(valueGenericType);
+	}
+	
+	
 	private String getTypeName(Type type) {
 		if(type instanceof ParameterizedType) {
 			ParameterizedType pt = (ParameterizedType)type;
@@ -190,10 +206,10 @@ public class Member{
 				sb.append(paramName).append(":").append(getTypeName(paramClasses[i]));
 			}
 			sb.append(")");
-			sb.append(":").append(getTypeName(valueGenericType));
+			sb.append(":").append(getValueTypeName());
 		}else {
 			sb.append(String.format("%-12s", name)).append(" : ");
-			sb.append(String.format("%-15s", getTypeName(valueGenericType)));
+			sb.append(String.format("%-15s", getValueTypeName()));
 		}
 		if(join != null) {
 			sb.append("  @join(");

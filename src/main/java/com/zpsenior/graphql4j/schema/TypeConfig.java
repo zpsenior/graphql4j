@@ -3,7 +3,7 @@ package com.zpsenior.graphql4j.schema;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.zpsenior.graphql4j.annotation.Field;
@@ -118,7 +118,7 @@ public class TypeConfig {
 
 	private void addMember(AccessibleObject access, String name) throws Exception{
 		if(members == null) {
-			members = new HashMap<>();
+			members = new LinkedHashMap<>();
 		}
 		if(name== null || "".equals(name)) {
 			throw new TypeException("empty member name");
@@ -143,14 +143,13 @@ public class TypeConfig {
 	public void toString(StringBuffer sb) {
 		sb.append("#").append(typeClass.getName()).append("\n");
 		sb.append("type ").append(name).append(" {").append("\n");
-		if(members == null) {
-			System.out.println(name);
-		}
-		for(String key : members.keySet()) {
-			Member member = members.get(key);
-			sb.append("   ");
-			member.toString(sb);
-			sb.append("\n");
+		if(members != null) {
+			for(String key : members.keySet()) {
+				Member member = members.get(key);
+				sb.append("   ");
+				member.toString(sb);
+				sb.append("\n");
+			}
 		}
 		sb.append("}\n");
 	}

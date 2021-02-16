@@ -1,7 +1,6 @@
 package com.zpsenior.graphql4j.spring;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
 import com.zpsenior.graphql4j.ParamFinder;
@@ -12,8 +11,6 @@ import com.zpsenior.graphql4j.utils.ScalarUtils;
 
 public class StringParamFinder extends ParamFinder<String> {
 	
-	private Map<String, String> paramValues = new HashMap<>();
-	
 	public StringParamFinder(Map<String, String[]> params) {
 		for(String key : params.keySet()) {
 			String value;
@@ -23,17 +20,8 @@ public class StringParamFinder extends ParamFinder<String> {
 			}else {
 				value = Arrays.toString(pv);
 			}
-			paramValues.put(key, value);
+			addParam(key, value);
 		}
-	}
-	
-	public Map<String, String> getParamValues(){
-		return paramValues;
-	}
-
-	@Override
-	protected String getObject(String name) throws Exception {
-		return paramValues.get(name);
 	}
 
 	@Override
