@@ -6,4 +6,12 @@ public abstract class Value {
 
 	public abstract Object getValue(QLContext context);
 	
+	public abstract void toString(StringBuffer sb);
+	
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		toString(sb);
+		return sb.toString();
+	}
+	
 }

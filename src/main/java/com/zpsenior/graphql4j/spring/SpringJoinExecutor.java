@@ -3,6 +3,9 @@ package com.zpsenior.graphql4j.spring;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.aop.support.AopUtils;
@@ -59,14 +62,38 @@ public class SpringJoinExecutor implements JoinExecutor {
 	}
 
 	@Override
-	public Object call(String request, Object[] paramValues, Class<?> resultType) throws Exception {
+	public Object call(String request, Object[] paramValues, Type resultType) throws Exception {
 		Provider provider = providers.get(request);
 		if(provider == null) {
 			throw new ExecuteException("can not find request:" + request);
 		}
 		Object result = provider.invoke(paramValues);
-		if(result != null && !resultType.isInstance(result)) {
-			throw new ExecuteException("result type(" + result.getClass().getName() + ") is not compatible:" + resultType.getName());
+		if(result == null) {
+			return null;
+		}
+		Class<?> cls = result.getClass();
+		if(resultType instanceof Class<?>) {
+			Class<?> resultClass = (Class<?>)resultType;
+			if(!resultClass.isInstance(result)) {
+				throw new ExecuteException("result type(" + cls.getName() + ") is not compatible:" + resultClass.getName());
+			}
+		}
+		if(resultType instanceof ParameterizedType) {
+			ParameterizedType pt = (ParameterizedType)resultType;
+			Class<?> rawType = (Class<?>)pt.getRawType();
+			if(!rawType.isInstance(result)) {
+				throw new ExecuteException("result type(" + cls.getName() + ") is not compatible:" + rawType.getName());
+			}
+			Type typ = pt.getActualTypeArguments()[0];
+			if(typ instanceof Class<?>) {
+				throw new ExecuteException("the member of result`s type(" + typ.getTypeName() + ") is not a Class");
+			}
+			Class<?> objClass = (Class<?>)typ;
+			for(Object obj : (List<?>)result) {
+				if(obj != null && !objClass.isInstance(obj)) {
+					throw new ExecuteException("the member of result`s type(" + obj.getClass().getName() + ") is not compatible:" + objClass.getName());
+				}
+			}
 		}
 		return result;
 	}

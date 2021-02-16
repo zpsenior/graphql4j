@@ -27,9 +27,8 @@ public class ObjectValue extends Value {
 	public Value[] getValues() {
 		return map.values().toArray(new Value[map.size()]);
 	}
-	
-	public String toString() {
-		StringBuffer sb = new StringBuffer();
+
+	public void toString(StringBuffer sb) {
 		boolean first = true;
 		sb.append("{");
 		for(String key : map.keySet()) {
@@ -42,6 +41,5 @@ public class ObjectValue extends Value {
 			sb.append(key).append(":").append(val);
 		}
 		sb.append("}");
-		return sb.toString();
 	}
 }

@@ -18,10 +18,8 @@ public class VariableValue extends Value {
 	public Object getValue(QLContext context) {
 		return context.getParamValue(varName);
 	}
-	
-	public String toString() {
-		StringBuffer sb = new StringBuffer();
+
+	public void toString(StringBuffer sb) {
 		sb.append("$").append(varName);
-		return sb.toString();
 	}
 }

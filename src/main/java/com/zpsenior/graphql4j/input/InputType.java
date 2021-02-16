@@ -1,6 +1,14 @@
 package com.zpsenior.graphql4j.input;
 
-public interface InputType {
+public abstract class InputType {
 
-	public boolean compatible(Class<?> cls);
+	public abstract boolean compatible(Class<?> cls);
+	
+	public abstract void toString(StringBuffer sb);
+	
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		toString(sb);
+		return sb.toString();
+	}
 }

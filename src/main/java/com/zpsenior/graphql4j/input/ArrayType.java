@@ -1,7 +1,7 @@
 package com.zpsenior.graphql4j.input;
 
 
-public class ArrayType implements InputType {
+public class ArrayType extends InputType {
 	
 	private InputType baseType;
 
@@ -13,12 +13,10 @@ public class ArrayType implements InputType {
 		return baseType;
 	}
 
-	public String toString() {
-		StringBuffer sb = new StringBuffer();
+	public void toString(StringBuffer sb) {
 		sb.append("[");
 		sb.append(baseType);
 		sb.append("]");
-		return sb.toString();
 	}
 
 	@Override

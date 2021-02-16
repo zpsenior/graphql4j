@@ -11,7 +11,7 @@ import com.zpsenior.graphql4j.schema.Member;
 import com.zpsenior.graphql4j.schema.Schema;
 import com.zpsenior.graphql4j.schema.TypeConfig;
 
-public class Element implements Comparable<Element>{
+public class Element extends QLNode implements Comparable<Element>{
 	
 	private String name;
 	private String alias;
@@ -132,7 +132,7 @@ public class Element implements Comparable<Element>{
 				}else {
 					sb.append(", ");
 				}
-				sb.append(arg);
+				arg.toString(0, sb);
 			}
 			sb.append(")");
 		}

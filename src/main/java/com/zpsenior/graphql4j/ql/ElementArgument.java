@@ -2,7 +2,7 @@ package com.zpsenior.graphql4j.ql;
 
 import com.zpsenior.graphql4j.value.Value;
 
-public class ElementArgument implements Comparable<ElementArgument>{
+public class ElementArgument extends QLNode implements Comparable<ElementArgument>{
 	
 	private String name;
 	private Value value;
@@ -39,11 +39,9 @@ public class ElementArgument implements Comparable<ElementArgument>{
 	public int compareTo(ElementArgument target) {
 		return name.compareTo(target.name);
 	}
-	
-	public String toString() {
-		StringBuffer sb = new StringBuffer();
+
+	public void toString(int deep, StringBuffer sb) {
 		sb.append(name).append(":");
-		sb.append(value);
-		return sb.toString();
+		value.toString(sb);
 	}
 }

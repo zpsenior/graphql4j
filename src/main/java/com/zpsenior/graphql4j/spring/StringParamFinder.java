@@ -7,6 +7,7 @@ import java.util.Map;
 import com.zpsenior.graphql4j.ParamFinder;
 import com.zpsenior.graphql4j.exception.ConversionException;
 import com.zpsenior.graphql4j.input.ArrayType;
+import com.zpsenior.graphql4j.input.InputType;
 import com.zpsenior.graphql4j.utils.ScalarUtils;
 
 public class StringParamFinder extends ParamFinder<String> {
@@ -37,7 +38,13 @@ public class StringParamFinder extends ParamFinder<String> {
 
 	@Override
 	protected Object convert2Array(String value, String name, ArrayType at) throws Exception {
-		return value.split(",");
+		String[] arrays = value.split(",");
+		Object[] values = new Object[arrays.length];
+		InputType baseType = at.getBaseType();
+		for(int i = 0; i < values.length; i++) {
+			values[i] = convert(arrays[i], name, baseType);
+		}
+		return values;
 	}
 
 	@Override

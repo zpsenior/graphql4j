@@ -33,7 +33,8 @@ public class Schema {
 		StringBuffer sb = new StringBuffer();
 		for(String key : configs.keySet()) {
 			TypeConfig config = configs.get(key);
-			sb.append(config).append("\n");
+			config.toString(sb);
+			sb.append("\n");
 		}
 		return sb.toString();
 	}

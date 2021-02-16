@@ -114,7 +114,7 @@ public class Member{
 		if(isMethod) {
 			Object[] values = getParamValues(context);
 			if(join != null) {
-				return context.call(join.bind(), values, valueType);
+				return context.call(join.bind(), values, valueGenericType);
 			}
 			if(inst == null) {
 				throw new ExecuteException("the instance invoking method(" + name + ") is null");
@@ -129,13 +129,15 @@ public class Member{
 				Object val = PropertyUtils.getProperty(inst, names[i]);
 				values[i] = val;
 			}
-			return context.call(join.bind(), values, valueType);
+			return context.call(join.bind(), values, valueGenericType);
 		}
 		if(inst == null) {
 			throw new ExecuteException("the instance invoking field(" + name + ") is null");
 		}
 		Field field = inst.getClass().getDeclaredField(name);
+		field.setAccessible(true);
 		return field.get(inst);
+		//return PropertyUtils.getProperty(inst, name);
 	}
 
 	private Object[] getParamValues(QLContext context) throws Exception {
@@ -172,6 +174,12 @@ public class Member{
 
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
+		toString(sb);
+		return sb.toString();
+	}
+	
+
+	public void toString(StringBuffer sb) {
 		if(isMethod) {
 			sb.append(name).append("(");
 			for(int i = 0; i < paramNames.length; i++) {
@@ -199,7 +207,6 @@ public class Member{
 			}
 			sb.append("))");
 		}
-		return sb.toString();
 	}
 
 	public Join getJoin() {

@@ -136,6 +136,11 @@ public class TypeConfig {
 	
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
+		toString(sb);
+		return sb.toString();
+	}
+	
+	public void toString(StringBuffer sb) {
 		sb.append("#").append(typeClass.getName()).append("\n");
 		sb.append("type ").append(name).append(" {").append("\n");
 		if(members == null) {
@@ -143,10 +148,11 @@ public class TypeConfig {
 		}
 		for(String key : members.keySet()) {
 			Member member = members.get(key);
-			sb.append("   ").append(member).append("\n");
+			sb.append("   ");
+			member.toString(sb);
+			sb.append("\n");
 		}
 		sb.append("}\n");
-		return sb.toString();
 	}
 	
 	private void logout(String msg) {

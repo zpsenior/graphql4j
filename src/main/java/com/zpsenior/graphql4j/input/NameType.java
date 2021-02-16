@@ -1,6 +1,6 @@
 package com.zpsenior.graphql4j.input;
 
-public class NameType implements InputType {
+public class NameType extends InputType {
 	
 	private String name;
 	private Class<?> bindClass;
@@ -18,10 +18,8 @@ public class NameType implements InputType {
 		return bindClass;
 	}
 
-	public String toString() {
-		StringBuffer sb = new StringBuffer();
+	public void toString(StringBuffer sb) {
 		sb.append(name);
-		return sb.toString();
 	}
 
 	@Override

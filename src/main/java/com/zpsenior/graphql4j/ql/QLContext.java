@@ -1,5 +1,6 @@
 package com.zpsenior.graphql4j.ql;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,7 +34,7 @@ public final class QLContext {
 		return params.get(name);
 	}
 
-	public Object call(String method, Object[] values, Class<?> resultType) throws Exception{
+	public Object call(String method, Object[] values, Type resultType) throws Exception{
 		return joiner.call(method, values, resultType);
 	}
 }

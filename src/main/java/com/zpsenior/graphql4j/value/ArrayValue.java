@@ -28,8 +28,7 @@ public class ArrayValue extends Value {
 		return array;
 	}
 	
-	public String toString() {
-		StringBuffer sb = new StringBuffer();
+	public void toString(StringBuffer sb) {
 		boolean first = true;
 		sb.append("[");
 		for(Value val : array) {
@@ -41,7 +40,6 @@ public class ArrayValue extends Value {
 			sb.append(val);
 		}
 		sb.append("]");
-		return sb.toString();
 	}
 
 }

@@ -3,7 +3,7 @@ package com.zpsenior.graphql4j.ql;
 import com.zpsenior.graphql4j.input.InputType;
 import com.zpsenior.graphql4j.value.Value;
 
-public class EntryArgument implements Comparable<EntryArgument>{
+public class EntryArgument extends QLNode implements Comparable<EntryArgument>{
 	
 	private String name;
 	
@@ -35,13 +35,12 @@ public class EntryArgument implements Comparable<EntryArgument>{
 		return name.compareTo(target.name);
 	}
 	
-	public String toString() {
-		StringBuffer sb = new StringBuffer();
+	public void toString(int deep, StringBuffer sb) {
 		sb.append("$").append(name).append(":");
 		sb.append(type);
 		if(defaultValue != null) {
-			sb.append(" = ").append(defaultValue);
+			sb.append(" = ");
+			defaultValue.toString(sb);
 		}
-		return sb.toString();
 	}
 }

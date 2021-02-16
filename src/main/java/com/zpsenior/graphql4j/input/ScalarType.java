@@ -3,7 +3,7 @@ package com.zpsenior.graphql4j.input;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ScalarType implements InputType {
+public class ScalarType extends InputType {
 
 	public final static String TYPE_BOOLEAN = "Boolean";
 	public final static String TYPE_STRING = "String";
@@ -96,6 +96,11 @@ public class ScalarType implements InputType {
 		} catch (Exception e) {
 			return false;
 		}
+	}
+
+	@Override
+	public void toString(StringBuffer sb) {
+		sb.append(name);
 	}
 
 }

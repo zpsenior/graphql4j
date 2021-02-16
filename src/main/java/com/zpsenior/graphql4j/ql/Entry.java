@@ -9,7 +9,7 @@ import com.zpsenior.graphql4j.schema.Schema;
 import com.zpsenior.graphql4j.schema.TypeConfig;
 import com.zpsenior.graphql4j.value.VariableValue;
 
-public class Entry implements Comparable<Entry>{
+public class Entry extends QLNode implements Comparable<Entry>{
 	private String name;
 	private EntryKind kind;
 	private EntryArgument[] arguments;
@@ -71,8 +71,7 @@ public class Entry implements Comparable<Entry>{
 		return name.compareTo(target.name);
 	}
 	
-	public String toString() {
-		StringBuffer sb = new StringBuffer();
+	public void toString(int deep, StringBuffer sb) {
 		sb.append(kind == EntryKind.Query ? "query" : "mutation").append(" ");
 		sb.append(name);
 		if(arguments.length > 0) {
@@ -84,7 +83,7 @@ public class Entry implements Comparable<Entry>{
 				}else {
 					sb.append(", ");
 				}
-				sb.append(arg);
+				arg.toString(0, sb);
 			}
 			sb.append(")");
 		}
@@ -94,7 +93,6 @@ public class Entry implements Comparable<Entry>{
 			sb.append("\n");
 		}
 		sb.append("}\n");
-		return sb.toString();
 	}
 
 	protected void checkVariable(VariableValue val, Class<?> type) throws Exception{
