@@ -13,11 +13,13 @@ import com.zpsenior.graphql4j.exception.TypeException;
 public class TypeConfig {
 	
 	private String name;
+	private String desc;
 	private Class<?> typeClass;
 	private Map<String, Member> members = null;
 
-	public TypeConfig(String name, Class<?> typeClass)throws Exception {
+	public TypeConfig(String name, String desc, Class<?> typeClass)throws Exception {
 		this.name = name;
+		this.desc = desc;
 		this.typeClass = typeClass;
 		if(typeClass.isEnum()) {
 			return;
@@ -29,6 +31,10 @@ public class TypeConfig {
 
 	public String getName() {
 		return name;
+	}
+
+	public String getDesc() {
+		return desc;
 	}
 
 	public Class<?> getBindClass() {
@@ -147,6 +153,7 @@ public class TypeConfig {
 			for(String key : members.keySet()) {
 				Member member = members.get(key);
 				sb.append("   ");
+				sb.append(String.format("%20s", key));
 				member.toString(sb);
 				sb.append("\n");
 			}

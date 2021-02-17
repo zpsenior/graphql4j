@@ -197,7 +197,7 @@ public class Member{
 
 	public void toString(StringBuffer sb) {
 		if(isMethod) {
-			sb.append(name).append("(");
+			sb.append("(");
 			for(int i = 0; i < paramNames.length; i++) {
 				String paramName = paramNames[i];
 				if(i > 0) {
@@ -208,7 +208,7 @@ public class Member{
 			sb.append(")");
 			sb.append(":").append(getValueTypeName());
 		}else {
-			sb.append(String.format("%-12s", name)).append(" : ");
+			sb.append(" : ");
 			sb.append(String.format("%-15s", getValueTypeName()));
 		}
 		if(join != null) {

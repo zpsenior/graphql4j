@@ -45,7 +45,8 @@ public class Schema {
 		if(configs.containsKey(typeName)) {
 			return null;
 		}
-		TypeConfig config = new TypeConfig(typeName, cls);
+		String desc = cls.getAnnotation(Type.class).desc();
+		TypeConfig config = new TypeConfig(typeName, desc, cls);
 		configs.put(typeName, config);
 		for(Member member : config.getMembers()){
 			buildReturnType(member);
