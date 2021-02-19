@@ -8,18 +8,19 @@ import java.util.Map;
 
 import com.zpsenior.graphql4j.annotation.Field;
 import com.zpsenior.graphql4j.annotation.Join;
+import com.zpsenior.graphql4j.annotation.Type;
 import com.zpsenior.graphql4j.exception.TypeException;
 
 public class TypeConfig {
 	
 	private String name;
-	private String desc;
+	private Type ann;
 	private Class<?> typeClass;
 	private Map<String, Member> members = null;
 
-	public TypeConfig(String name, String desc, Class<?> typeClass)throws Exception {
+	public TypeConfig(String name, Class<?> typeClass)throws Exception {
 		this.name = name;
-		this.desc = desc;
+		this.ann = typeClass.getAnnotation(Type.class);
 		this.typeClass = typeClass;
 		if(typeClass.isEnum()) {
 			return;
@@ -33,8 +34,8 @@ public class TypeConfig {
 		return name;
 	}
 
-	public String getDesc() {
-		return desc;
+	public Type getAnn() {
+		return ann;
 	}
 
 	public Class<?> getBindClass() {

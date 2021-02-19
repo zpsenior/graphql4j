@@ -10,5 +10,6 @@ import java.lang.annotation.Target;
 public @interface Field {
 	String[] value() default {};
 	boolean isKey() default false;
+	int len() default 20;
 	String desc() default "";
 }

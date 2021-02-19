@@ -10,4 +10,5 @@ import java.lang.annotation.Target;
 public @interface Type {
 	String value() default "";
 	String desc() default "";
+	String incr() default "";
 }
