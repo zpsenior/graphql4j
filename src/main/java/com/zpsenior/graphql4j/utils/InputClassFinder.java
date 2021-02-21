@@ -20,8 +20,14 @@ public class InputClassFinder implements InputFinder {
 	private Map<String, Class<?>> classes = new HashMap<>();
 	
 	private ClassLoader cl = Thread.currentThread().getContextClassLoader();
+	
+	public InputClassFinder(String[] packageNames) throws Exception {
+		for(String packageName : packageNames) {
+			init(packageName);
+		}
+	}
 
-	public InputClassFinder(String packageName) throws Exception {
+	private void init(String packageName) throws Exception {
 		if(packageName == null || "".equals(packageName)) {
 			return;
 		}
@@ -93,7 +99,7 @@ public class InputClassFinder implements InputFinder {
 				findInFile(packageName + "." + file.getName(), file.getAbsolutePath());
 			} else {
 				String className = file.getName().substring(0, file.getName().length() - 6);
-				addClass(className);
+				addClass(packageName + "." + className);
 			}
 		}
 	}

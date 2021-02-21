@@ -1,5 +1,6 @@
 package com.zpsenior.graphql4j.ql;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -88,7 +89,7 @@ public class Element extends QLNode implements Comparable<Element>{
 	public void bind(Schema schema, TypeConfig parent)throws Exception {
 		Member member = parent.getMemberByName(name);
 		if(member == null) {
-			throw new BindException("can not find :" + name + " in " + parent.getName());
+			throw new BindException("can not find [" + name + "] in " + parent.getName());
 		}
 		if(member.isMethod()) {
 			member.bindArgumentValues(arguments);
@@ -102,7 +103,8 @@ public class Element extends QLNode implements Comparable<Element>{
 			}
 			Class<?> valueType = member.getValueType();
 			if(member.isListType()) {
-				valueType = valueType.getTypeParameters()[0].getClass();
+				ParameterizedType pt = (ParameterizedType)member.getValueGenericType();
+				valueType = (Class<?>)pt.getActualTypeArguments()[0];
 			}
 			TypeConfig typeConfig = schema.getTypeConfig(valueType);
 			for(Element child : children) {

@@ -15,6 +15,8 @@ import com.zpsenior.graphql4j.ql.QLRoot;
 import com.zpsenior.graphql4j.schema.Schema;
 import com.zpsenior.graphql4j.utils.InputClassFinder;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import javax.servlet.http.HttpServletRequest;
@@ -46,12 +48,12 @@ public abstract class GraphQLInterceptor extends HandlerInterceptorAdapter {
 		bind = true;
 	}
 	
-	public void init(String queryClassName, String mutationClassName, String inputClassPackage, String qlFileName)throws Exception {
+	public void init(String queryClassName, String mutationClassName, String inputClassPackages, String qlFileName)throws Exception {
 		
 		this.queryClass = Class.forName(queryClassName);
 		this.mutationClass = Class.forName(mutationClassName);
 		
-		InputClassFinder finder = new InputClassFinder(inputClassPackage);
+		InputClassFinder finder = new InputClassFinder(inputClassPackages.split(","));
 		schema = new Schema(queryClass, mutationClass);
 		
 		QLBuilder builder = new QLBuilder();
@@ -63,23 +65,30 @@ public abstract class GraphQLInterceptor extends HandlerInterceptorAdapter {
 		root.bind(schema);
 	}
 	
-	protected ParamFinder<?> buildParamFinder(HttpServletRequest request)throws Exception{
+	private ParamFinder<?> buildParamFinder(HttpServletRequest request)throws Exception{
 		ParamFinder<?> finder;
-		String requestType = request.getHeader("X-Requested-With");
-		if(requestType != null && requestType.equalsIgnoreCase("XMLHttpRequest")) {
-			finder = new JsonParamFinder(request.getInputStream());
+		String contentType = request.getContentType();
+		if(contentType == null) {
+			return null;
+		}
+		if(contentType.endsWith("/json")) {
+			String body = readBody(request.getInputStream());
+			validateBody(request, body);
+			finder = new JsonParamFinder(body);
 		}else{
+			validateParam(request);
 			finder = new StringParamFinder(request.getParameterMap());
 		}
-		validate(request, finder);
 		return finder;
 	}
 
-	protected abstract void validate(HttpServletRequest request, ParamFinder<?> finder)throws Exception;
+	protected abstract void validateParam(HttpServletRequest request)throws Exception;
+
+	protected abstract void validateBody(HttpServletRequest request, String body)throws Exception;
 
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
 			throws Exception {
-		
+		ParamFinder<?> paramFinder = null;
 		if(!bind) {
 			ApplicationContext ctx = RequestContextUtils.findWebApplicationContext(request);
 			bind(ctx);
@@ -88,29 +97,20 @@ public abstract class GraphQLInterceptor extends HandlerInterceptorAdapter {
 		String entryName = getEntryName(request);
 		
 		try{
-			validate(request, entryName);
-		}catch(Exception e) {
-			response.getWriter().println(new Result(Result.ERROR, e));
-			return true;
-		}
-		
-		ParamFinder<?> paramFinder;
-		
-		try{
 			paramFinder = buildParamFinder(request);
 		}catch(Exception e) {
 			response.getWriter().println(new Result(Result.ERROR, e));
-			return true;
+			return false;
 		}
 		
 		if("schema".equals(entryName)) {
 			response.getWriter().println(schema.toString());
-			return true;
+			return false;
 		}
 		
 		if("graphql".equals(entryName)) {
 			response.getWriter().println(root.toString());
-			return true;
+			return false;
 		}
 		
 		Result result = doHandle(entryName, paramFinder);
@@ -118,10 +118,18 @@ public abstract class GraphQLInterceptor extends HandlerInterceptorAdapter {
 		String json = (new ObjectMapper()).writeValueAsString(result);
 		
 		response.getWriter().println(json);
-		return true;
+		return false;
 	}
 
-	protected abstract void validate(HttpServletRequest request, String entryName) throws Exception;
+	private String readBody(InputStream inputStream)throws Exception {
+		ByteArrayOutputStream result = new ByteArrayOutputStream();
+		byte[] buffer = new byte[1024];
+		int length;
+		while ((length = inputStream.read(buffer)) != -1) {
+		    result.write(buffer, 0, length);
+		}
+		return result.toString("UTF-8");
+	}
 
 	private Result doHandle(String entryName, ParamFinder<?> finder) {
 		
@@ -140,7 +148,7 @@ public abstract class GraphQLInterceptor extends HandlerInterceptorAdapter {
 	private String getEntryName(HttpServletRequest request){
 		String url = request.getRequestURI();
 		int pos = url.lastIndexOf('/');
-		if(pos > 0) {
+		if(pos >= 0) {
 			return url.substring(pos + 1);
 		}
 		return null;

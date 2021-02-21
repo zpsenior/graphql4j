@@ -98,7 +98,7 @@ public class Schema {
 	private String getTypeName(Class<?> cls) throws Exception{
 		Type type = cls.getAnnotation(Type.class);
 		if(type == null) {
-			throw new TypeException(cls.getName() + " is not annotated by Type!");
+			throw new TypeException("[" + cls.getName() + "] is not annotated by Type!");
 		}
 		String typeName = type.value();
 		if(typeName == null || "".equals(typeName)) {

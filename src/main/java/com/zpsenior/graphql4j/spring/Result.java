@@ -38,6 +38,14 @@ public class Result {
 		return data;
 	}
 	
-	
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		sb.append("{");
+		sb.append("\"code\":\"").append(code).append("\"");
+		sb.append(",\"msg\":\"").append(msg).append("\"");
+		sb.append(",\"data\":\"").append(data).append("\"");
+		sb.append("}");
+		return sb.toString();
+	}
 
 }

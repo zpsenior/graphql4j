@@ -5,7 +5,6 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import com.zpsenior.graphql4j.ql.QLBuilder;
-import com.zpsenior.graphql4j.ql.QLContext;
 import com.zpsenior.graphql4j.ql.QLRoot;
 import com.zpsenior.graphql4j.schema.Schema;
 import com.zpsenior.graphql4j.test.input.QueryGoodsParam;
@@ -47,7 +46,7 @@ public class TestExecute {
 		
 		QLRoot root = new QLRoot();
 		QLBuilder builder = new QLBuilder();
-		InputClassFinder finder = new InputClassFinder(QueryGoodsParam.class.getPackage().getName());
+		InputClassFinder finder = new InputClassFinder(new String[] {QueryGoodsParam.class.getPackage().getName()});
 
 		builder.build(fr, finder, root);
 		

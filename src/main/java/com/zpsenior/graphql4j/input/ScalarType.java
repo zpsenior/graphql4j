@@ -18,24 +18,24 @@ public class ScalarType extends InputType {
 	public final static String TYPE_BIGINT = "BigInteger";
 	public final static String TYPE_BIGDECIMAL = "BigDecimal";
 	
-	@SuppressWarnings("serial")
-	private final static Map<String, ScalarType> types = new HashMap<String, ScalarType>() {
+	private static Map<String, ScalarType> types = null;
+	
 
-			{
-				put(TYPE_BOOLEAN, Boolean);
-				put(TYPE_STRING, String);
-				put(TYPE_BYTE, Byte);
-				put(TYPE_SHORT, Short);
-				put(TYPE_INT, Int);
-				put(TYPE_FLOAT, Float);
-				put(TYPE_DOUBLE, Double);
-				put(TYPE_LONG, Long);
-				put(TYPE_CHAR, Char);
-				put(TYPE_DATE, Date);
-				put(TYPE_BIGINT, BigInt);
-				put(TYPE_BIGDECIMAL, BigDecimal);
-			}
-	};
+	private static void init() {
+		types = new HashMap<>();
+		types.put(TYPE_BOOLEAN, Boolean);
+		types.put(TYPE_STRING, String);
+		types.put(TYPE_BYTE, Byte);
+		types.put(TYPE_SHORT, Short);
+		types.put(TYPE_INT, Int);
+		types.put(TYPE_FLOAT, Float);
+		types.put(TYPE_DOUBLE, Double);
+		types.put(TYPE_LONG, Long);
+		types.put(TYPE_CHAR, Char);
+		types.put(TYPE_DATE, Date);
+		types.put(TYPE_BIGINT, BigInt);
+		types.put(TYPE_BIGDECIMAL, BigDecimal);
+	}
 
 	public final static ScalarType Boolean = new ScalarType(TYPE_BOOLEAN);
 	public final static ScalarType String  = new ScalarType(TYPE_STRING);
@@ -63,6 +63,9 @@ public class ScalarType extends InputType {
 	
 	
 	public static ScalarType getType(String name) {
+		if(types == null) {
+			init();
+		}
 		for(String type :types.keySet()) {
 			if(type.equals(name)) {
 				return types.get(name);
