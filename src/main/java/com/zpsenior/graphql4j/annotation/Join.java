@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Join {
 	String[] map() default {};
-	String bind();
+	String request();
 	String[] params() default {};
 }

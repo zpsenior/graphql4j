@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.zpsenior.graphql4j.JoinExecutor;
 import com.zpsenior.graphql4j.exception.BindException;
 import com.zpsenior.graphql4j.schema.Member;
 import com.zpsenior.graphql4j.schema.Schema;
@@ -86,15 +87,17 @@ public class Element extends QLNode implements Comparable<Element>{
 		return values;
 	}
 
-	public void bind(Schema schema, TypeConfig parent)throws Exception {
+	public void bind(Schema schema, JoinExecutor joinExecutor, TypeConfig parent)throws Exception {
 		Member member = parent.getMemberByName(name);
 		if(member == null) {
 			throw new BindException("can not find [" + name + "] in " + parent.getName());
 		}
 		if(member.isMethod()) {
 			member.bindArgumentValues(arguments);
-		}else if(member.getJoin() != null){
-			
+		}
+		if(member.getJoin() != null){
+			Class<?> parentClass = parent.getBindClass();
+			member.bindJoin(joinExecutor, parentClass);
 		}
 		this.member = member;
 		if(children != null && children.length > 0) {
@@ -108,7 +111,7 @@ public class Element extends QLNode implements Comparable<Element>{
 			}
 			TypeConfig typeConfig = schema.getTypeConfig(valueType);
 			for(Element child : children) {
-				child.bind(schema, typeConfig);
+				child.bind(schema, joinExecutor, typeConfig);
 			}
 		}
 	}

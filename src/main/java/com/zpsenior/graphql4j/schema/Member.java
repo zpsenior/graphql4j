@@ -11,6 +11,7 @@ import java.util.List;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.springframework.beans.BeanUtils;
 
+import com.zpsenior.graphql4j.JoinExecutor;
 import com.zpsenior.graphql4j.annotation.Join;
 import com.zpsenior.graphql4j.annotation.Var;
 import com.zpsenior.graphql4j.exception.BindException;
@@ -116,11 +117,40 @@ public class Member{
 		return false;
 	}
 	
+	public void bindJoin(JoinExecutor joinExecutor, Class<?> parentClass)throws Exception {
+		if(join == null) {
+			return ;
+		}
+		if(isMethod) {
+			joinExecutor.bind(join.request(), null, paramClasses);
+		}else {
+			String[] names = join.params();
+			Class<?>[] fieldClasses = getFieldClass(parentClass, names);
+			joinExecutor.bind(join.request(), names, fieldClasses);
+		}
+	}
+	
+	private Class<?>[] getFieldClass(Class<?> parentClass, String[] names)throws Exception{
+		if(names == null || names.length == 0) {
+			return null;
+		}
+		Class<?>[]classes = new Class<?>[names.length];
+		for(int i = 0;  i < names.length; i++) {
+			String name = names[i];
+			try{
+				classes[i] = parentClass.getDeclaredField(name).getType();
+			}catch(Throwable e) {
+				throw new BindException("can not find field[" + name + "] in Class[" + parentClass.getName() + "]");
+			}
+		}
+		return classes;
+	}
+	
 	public Object invoke(QLContext context, Object inst)throws Exception {
 		if(isMethod) {
 			Object[] values = getParamValues(context);
 			if(join != null) {
-				return context.call(join.bind(), values, valueGenericType);
+				return context.call(join.request(), null, values, valueGenericType);
 			}
 			if(inst == null) {
 				throw new ExecuteException("the instance invoking method(" + name + ") is null");
@@ -135,7 +165,7 @@ public class Member{
 				Object val = PropertyUtils.getProperty(inst, names[i]);
 				values[i] = val;
 			}
-			Object result = context.call(join.bind(), values, valueGenericType);
+			Object result = context.call(join.request(), names, values, valueGenericType);
 			//PropertyUtils.setProperty(inst, name, result);
 			Field field = inst.getClass().getDeclaredField(name);
 			field.setAccessible(true);
@@ -213,7 +243,7 @@ public class Member{
 		}
 		if(join != null) {
 			sb.append("  @join(");
-			sb.append(join.bind()).append("(");
+			sb.append(join.request()).append("(");
 			String[] params = join.params();
 			for(int i = 0; i < params.length; i++) {
 				if(i > 0) {

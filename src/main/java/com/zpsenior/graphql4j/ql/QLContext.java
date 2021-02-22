@@ -34,7 +34,7 @@ public final class QLContext {
 		return params.get(name);
 	}
 
-	public Object call(String method, Object[] values, Type resultType) throws Exception{
-		return joiner.call(method, values, resultType);
+	public Object call(String request, String[] names, Object[] values, Type resultType) throws Exception{
+		return joiner.call(request, names, values, resultType);
 	}
 }

@@ -45,6 +45,8 @@ public abstract class GraphQLInterceptor extends HandlerInterceptorAdapter {
 		joinExecutor = new SpringJoinExecutor(ctx);
 		this.query = ctx.getBean(queryClass);
 		this.mutation = ctx.getBean(mutationClass);
+		
+		root.bind(schema, joinExecutor);
 		bind = true;
 	}
 	
@@ -61,8 +63,6 @@ public abstract class GraphQLInterceptor extends HandlerInterceptorAdapter {
 		InputStreamReader fr = new InputStreamReader(this.getClass().getClassLoader().getResource(qlFileName).openStream());
 		
 		builder.build(fr, finder, root);
-		
-		root.bind(schema);
 	}
 	
 	private ParamFinder<?> buildParamFinder(HttpServletRequest request)throws Exception{

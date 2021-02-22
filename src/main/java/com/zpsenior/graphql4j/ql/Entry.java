@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zpsenior.graphql4j.JoinExecutor;
 import com.zpsenior.graphql4j.exception.BindException;
 import com.zpsenior.graphql4j.schema.Schema;
 import com.zpsenior.graphql4j.schema.TypeConfig;
@@ -58,11 +59,11 @@ public class Entry extends QLNode implements Comparable<Entry>{
 		return map;
 	}
 	
-	public void bind(Schema schema) throws Exception{
+	public void bind(Schema schema, JoinExecutor joinExecutor) throws Exception{
 		String name = kind == EntryKind.Query ? "Query" : "Mutation";
 		TypeConfig typeConfig = schema.getTypeConfig(name);
 		for(Element ele : elements) {
-			ele.bind(schema, typeConfig);
+			ele.bind(schema, joinExecutor, typeConfig);
 		}
 	}
 

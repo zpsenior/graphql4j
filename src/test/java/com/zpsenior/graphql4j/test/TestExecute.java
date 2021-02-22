@@ -50,7 +50,7 @@ public class TestExecute {
 
 		builder.build(fr, finder, root);
 		
-		root.bind(schema);
+		root.bind(schema, null);
 		
 		//QLContext context = new QLContext(finder, joiner);
 		
