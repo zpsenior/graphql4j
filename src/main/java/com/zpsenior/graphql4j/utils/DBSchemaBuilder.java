@@ -19,7 +19,7 @@ public class DBSchemaBuilder extends SQLBuilder{
 
 	public void build(PrintWriter pw, Filter filter) {
 		for(String name : schema.getTypeNames()) {
-			if(name.startsWith("Query") || name.startsWith("Mutation")) {
+			if(filter != null && filter.filterType(name)) {
 				continue;
 			}
 			TypeConfig tc = schema.getTypeConfig(name);

@@ -31,7 +31,7 @@ public class Goods {
 	@Field
 	private String categoryId;
 	
-	@Join(bind = "getGoodsCategory", params = { "tenantId", "categoryId" })
+	@Join(request = "getGoodsCategory", params = { "tenantId", "categoryId" })
 	private GoodsCategory category;
 
 	@Field

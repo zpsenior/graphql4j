@@ -19,7 +19,7 @@ public class GoodsCategory {
 	private String name;
 
 
-	@Join(bind = "queryGoodsList", params = { "tenantId", "categoryId" })
+	@Join(request = "queryGoodsList", params = { "tenantId", "categoryId" })
 	private List<Goods> goodsList;
 
 }

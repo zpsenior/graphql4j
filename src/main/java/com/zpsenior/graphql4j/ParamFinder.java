@@ -14,7 +14,7 @@ public abstract class ParamFinder<T> {
 	
 	private Map<String, T> params = new HashMap<>();
 	
-	protected void addParam(String key, T value) {
+	public void addParam(String key, T value) {
 		params.put(key, value);
 	}
 	

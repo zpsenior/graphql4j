@@ -28,9 +28,9 @@ public class Tenant {
 	@Field
 	private Date approvalDate;
 
-	@Join(bind = "queryAdminList", params = { "tenantId" }, map = { "managers" })
+	@Join(request = "queryAdminList", params = { "tenantId" }, map = { "managers" })
 	private List<TenantAdmin> admins;
 
-	@Join(bind = "queryUserList", params = { "tenantId" })
+	@Join(request = "queryUserList", params = { "tenantId" })
 	private List<User> users;
 }

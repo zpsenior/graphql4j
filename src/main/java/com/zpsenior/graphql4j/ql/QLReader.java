@@ -123,6 +123,6 @@ public class QLReader {
 	}
 	
 	private void logout(String msg) {
-		System.out.println(msg);
+		//System.out.println(msg);
 	}
 }

@@ -108,6 +108,6 @@ public class Schema {
 	}
 	
 	private void logout(String msg) {
-		System.out.println(msg);
+		//System.out.println(msg);
 	}
 }

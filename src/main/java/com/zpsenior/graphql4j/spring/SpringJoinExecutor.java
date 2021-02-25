@@ -95,7 +95,7 @@ public class SpringJoinExecutor implements JoinExecutor {
 
 	@Override
 	public void bind(String request, String[] paramNames, Class<?>[] paramClasses)throws Exception {
-		int pos = request.indexOf('.');
+		int pos = request.lastIndexOf('.');
 		if(pos <= 0) {
 			throw new BindException("can not find request[" + request + "]");
 		}

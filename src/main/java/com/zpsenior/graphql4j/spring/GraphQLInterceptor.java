@@ -15,8 +15,6 @@ import com.zpsenior.graphql4j.ql.QLRoot;
 import com.zpsenior.graphql4j.schema.Schema;
 import com.zpsenior.graphql4j.utils.InputClassFinder;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import javax.servlet.http.HttpServletRequest;
@@ -65,26 +63,9 @@ public abstract class GraphQLInterceptor extends HandlerInterceptorAdapter {
 		builder.build(fr, finder, root);
 	}
 	
-	private ParamFinder<?> buildParamFinder(HttpServletRequest request)throws Exception{
-		ParamFinder<?> finder;
-		String contentType = request.getContentType();
-		if(contentType == null) {
-			return null;
-		}
-		if(contentType.endsWith("/json")) {
-			String body = readBody(request.getInputStream());
-			validateBody(request, body);
-			finder = new JsonParamFinder(body);
-		}else{
-			validateParam(request);
-			finder = new StringParamFinder(request.getParameterMap());
-		}
-		return finder;
-	}
-
-	protected abstract void validateParam(HttpServletRequest request)throws Exception;
-
-	protected abstract void validateBody(HttpServletRequest request, String body)throws Exception;
+	protected abstract ParamFinder<?> buildParamFinder(HttpServletRequest request)throws Exception;
+	
+	protected abstract void checkPermission(HttpServletRequest request, String entryName)throws Exception;
 
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
 			throws Exception {
@@ -97,6 +78,7 @@ public abstract class GraphQLInterceptor extends HandlerInterceptorAdapter {
 		String entryName = getEntryName(request);
 		
 		try{
+			checkPermission(request, entryName);
 			paramFinder = buildParamFinder(request);
 		}catch(Exception e) {
 			response.getWriter().println(new Result(Result.ERROR, e));
@@ -119,16 +101,6 @@ public abstract class GraphQLInterceptor extends HandlerInterceptorAdapter {
 		
 		response.getWriter().println(json);
 		return false;
-	}
-
-	private String readBody(InputStream inputStream)throws Exception {
-		ByteArrayOutputStream result = new ByteArrayOutputStream();
-		byte[] buffer = new byte[1024];
-		int length;
-		while ((length = inputStream.read(buffer)) != -1) {
-		    result.write(buffer, 0, length);
-		}
-		return result.toString("UTF-8");
 	}
 
 	private Result doHandle(String entryName, ParamFinder<?> finder) {
